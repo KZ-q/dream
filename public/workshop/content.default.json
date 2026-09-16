@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "badge": "OPEN FOR COMMISSIONS",
+    "title1": "以 AI 为笔",
+    "title2": "光影为墨",
+    "subtitle": "你好，我是孔诸祺。一位 AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。\n在这里，记录我与模型共同完成的每一次冒险。",
+    "bg": "assets/images/cover-dongri.jpg",
+    "slides": [
+      "assets/images/cover-dongri.jpg",
+      "assets/images/cover-waimai.jpg",
+      "assets/images/compressed2-q65.jpg"
+    ]
+  },
+  "topics": [
+    { "date": "2026.09.07", "title": "《外卖侠》制作复盘：如何用 AI 让城市夜景动起来" },
+    { "date": "2026.09.01", "title": "《冬日恋曲》上线：一部关于等待的 AI 爱情短片" },
+    { "date": "2026.08.20", "title": "我的 AIGC 工具箱更新：即梦 / 可灵 / Runway 的新用法" }
+  ],
+  "about": {
+    "p1": "我是孔诸祺，一名 AIGC 影像创作者。我相信 AI 不是替代创作者，而是放大想象力的工具——\n《冬日恋曲》与《外卖侠》正是这一理念的两次实践：一次温柔，一次热血。",
+    "p2": "从一句提示词开始，像在旷野里点起篝火：先看清方向，再让画面自己走过来。"
+  },
+  "story": {
+    "quote": "故事始于一句提示词。\n在模型的深处，回荡着我想要的画面。\n于是我按下生成——那便成了我的信条。",
+    "by": "— 孔诸祺 · 创作手记",
+    "bg": "assets/images/cover-waimai.jpg"
+  },
+  "works": [
+    { "no": "01", "title": "冬日恋曲", "desc": "AI 生成爱情短片 · 冬日黄昏下的心动瞬间", "tags": ["AI 视频", "情感叙事", "2026"], "cover": "assets/images/cover-dongri.jpg", "bilibili": "", "local": "" },
+    { "no": "02", "title": "外卖侠", "desc": "AI 超英题材短片 · 都市夜空中的平凡英雄", "tags": ["AI 视频", "超英题材", "2026"], "cover": "assets/images/cover-waimai.jpg", "bilibili": "", "local": "" },
+    { "no": "03", "title": "新作", "desc": "AI 短片 · 标题与封面待补充", "tags": ["AI 视频", "新作", "2026"], "cover": "assets/images/cover-work3.svg", "bilibili": "", "local": "" }
+  ],
+  "movie": {
+    "title": "外卖侠",
+    "desc": "当送外卖的普通人披上战衣，城市就有了新的守护者。全片由 AI 生成：分镜设计 → 图像生成 → 图生视频 → 剪辑配乐。",
+    "bilibili": "",
+    "poster": "assets/images/cover-waimai.jpg"
+  },
+  "motion": [
+    { "title": "动态影像 · 01", "desc": "AI 生成竖屏动图 · 5s 循环", "src": "assets/videos/motion-01.mp4" },
+    { "title": "动态影像 · 02", "desc": "AI 生成竖屏动图 · 5s 循环", "src": "assets/videos/motion-02.mp4" }
+  ],
+  "tracks": [],
+  "profile": {
+    "name": "孔诸祺",
+    "role": "AIGC 影像创作者 / 内容运营",
+    "motto": "以 AI 为笔，光影为墨",
+    "facts": [
+      { "label": "BASE", "value": "江苏 · 南京" },
+      { "label": "方向", "value": "AIGC 内容创作 / 视觉叙事" },
+      { "label": "状态", "value": "开放合作 · 求职中" }
+    ],
+    "bio": [
+      "2003 年生，江苏南京人。临床医学专科出身，在苏州市吴中人民医院完成一年驻点实习（轮转儿科 / 妇科 / 急诊 / 呼吸内科 / 胸外科）后，选择转向 AI 内容行业。",
+      "完成模数师学院 AIGC 内容创作专项训练（60 课时 / 12 周），能独立跑通「提示词 → 图像 → 视频 → 剪辑」全链路：自撰《AIGC 生产笔记整理与示例手册》，独立完成 30 页 AIGC 宣传片立项提案，并参与本作品集站的策划与搭建。"
+    ],
+    "timeline": [
+      { "period": "2026", "title": "AIGC 影像创作者", "org": "独立创作", "desc": "AI 短片《冬日恋曲》《外卖侠》；个人作品集站策划与搭建" },
+      { "period": "2025—2026", "title": "电商运营合伙人", "org": "阿里巴巴 · 南京一物一码", "desc": "店铺运营、内容投放与转化复盘" },
+      { "period": "2025", "title": "医疗器械 QC / 销售", "org": "南京竹海生物科技 / 木斐乐医疗科技", "desc": "质量检测、客户沟通与需求对接" },
+      { "period": "2021—2025", "title": "临床医学（专科）", "org": "苏州卫生职业技术学院", "desc": "吴中人民医院驻点实习 1 年，轮转五大科室" }
+    ],
+    "skills": ["提示词工程", "即梦 / 可灵 / Vidu", "MJ / SD / Flux", "Runway", "剪辑配乐", "视觉叙事", "Vue3 基础", "医疗数据标注"]
+  },
+  "contact": {
+    "email": "hello@kongzhuqi.studio",
+    "douyin": "@孔诸祺的 AI 片场",
+    "wechat": "kongzhuqi_studio"
+  },
+  "backgrounds": {}
+}

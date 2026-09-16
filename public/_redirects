@@ -1,0 +1,5 @@
+# SPA 路由重写：把所有未匹配路径回退到 index.html
+# （History 路由下直接刷新 /works 等子页面时不再 404）
+# Cloudflare Pages 与腾讯云 EdgeOne Pages 原生读取本文件；
+# Vercel 忽略本文件（使用 vercel.json 的 rewrites），两者不冲突
+/*    /index.html   200

@@ -1,0 +1,915 @@
+{
+  "site": {
+    "title": {
+      "zh": "祺士 · AIGC 创作者",
+      "en": "QiShi · AIGC Creator"
+    },
+    "description": {
+      "zh": "祺士 —— 一位虚构的示例创作者：AI 绘画、视频叙事与工作流搭建，探索「人机共创」的边界。",
+      "en": "QiShi — a fictional example AIGC creator exploring human-AI co-creation through AI art, video and workflows."
+    },
+    "logo": "/assets/images/logo.svg",
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "defaultLang": "zh",
+    "contactEmail": "hello@qishi.studio",
+    "socials": [
+      {
+        "platform": "bilibili",
+        "url": "https://space.bilibili.com/1800000",
+        "label": {
+          "zh": "哔哩哔哩",
+          "en": "Bilibili"
+        }
+      },
+      {
+        "platform": "xiaohongshu",
+        "url": "https://www.xiaohongshu.com/user/profile/qishi",
+        "label": {
+          "zh": "小红书",
+          "en": "Xiaohongshu"
+        }
+      },
+      {
+        "platform": "douyin",
+        "url": "https://www.douyin.com/user/qishi",
+        "label": {
+          "zh": "抖音",
+          "en": "Douyin"
+        }
+      },
+      {
+        "platform": "x",
+        "url": "https://x.com/qishi_ai",
+        "label": {
+          "zh": "X（推特）",
+          "en": "X (Twitter)"
+        }
+      },
+      {
+        "platform": "github",
+        "url": "https://github.com/qishi-ai",
+        "label": {
+          "zh": "GitHub",
+          "en": "GitHub"
+        }
+      },
+      {
+        "platform": "mail",
+        "url": "mailto:hello@qishi.studio",
+        "label": {
+          "zh": "邮箱",
+          "en": "Email"
+        }
+      }
+    ]
+  },
+  "theme": {
+    "preset": "aurora"
+  },
+  "nav": [
+    {
+      "to": "/",
+      "label": {
+        "zh": "首页",
+        "en": "Home"
+      }
+    },
+    {
+      "to": "/works",
+      "label": {
+        "zh": "作品",
+        "en": "Works"
+      }
+    },
+    {
+      "to": "/videos",
+      "label": {
+        "zh": "视频",
+        "en": "Videos"
+      }
+    },
+    {
+      "to": "/about",
+      "label": {
+        "zh": "关于我",
+        "en": "About"
+      }
+    }
+  ],
+  "footer": {
+    "owner": {
+      "zh": "祺士",
+      "en": "QiShi"
+    },
+    "links": [
+      {
+        "to": "/works",
+        "label": {
+          "zh": "作品集",
+          "en": "Works"
+        }
+      },
+      {
+        "to": "/videos",
+        "label": {
+          "zh": "视频",
+          "en": "Videos"
+        }
+      },
+      {
+        "to": "/about#contact",
+        "label": {
+          "zh": "合作",
+          "en": "Commission"
+        }
+      }
+    ],
+    "aiDisclosure": {
+      "zh": "内容共创声明：本站作品均以 AI 生成 + 人工精修方式完成，过程与参数在对应作品中标注。",
+      "en": "AI disclosure: all works on this site are AI-generated and hand-refined; process and parameters are noted per work."
+    },
+    "beian": {
+      "text": "浙ICP备XXXXXXXX号",
+      "url": "https://beian.miit.gov.cn/"
+    },
+    "note": {
+      "zh": "Built with Vue 3 · Deployed on Vercel",
+      "en": "Built with Vue 3 · Deployed on Vercel"
+    }
+  },
+  "home": {
+    "sections": [
+      {
+        "type": "hero",
+        "image": {
+          "src": "/assets/images/hero.svg",
+          "alt": {
+            "zh": "夜色星野与远山的幻境插画",
+            "en": "Dreamy night sky with mountains"
+          },
+          "objectPosition": "center"
+        },
+        "badge": {
+          "text": {
+            "zh": "接受合作委托",
+            "en": "Open for commissions"
+          }
+        },
+        "title": {
+          "zh": "以 AI 为笔，想象为墨",
+          "en": "Painting with AI,\nDriven by Imagination"
+        },
+        "subtitle": {
+          "zh": "你好，我是祺士。一位 AIGC 独立创作者：AI 绘画 / 视频叙事 / 工作流搭建。在这里记录我与模型共同完成的一切。",
+          "en": "Hi, I'm QiShi — independent AIGC creator: AI art, video storytelling and workflow design. This is a record of everything I co-create with models."
+        },
+        "cta": [
+          {
+            "label": {
+              "zh": "查看作品",
+              "en": "View works"
+            },
+            "url": "/works",
+            "style": "primary"
+          },
+          {
+            "label": {
+              "zh": "了解我",
+              "en": "About me"
+            },
+            "url": "/about",
+            "style": "ghost"
+          }
+        ]
+      },
+      {
+        "type": "works",
+        "title": {
+          "zh": "精选作品",
+          "en": "Featured Works"
+        },
+        "count": 6,
+        "more": "/works"
+      },
+      {
+        "type": "video",
+        "title": {
+          "zh": "最新视频：一周一座「像素城」",
+          "en": "Latest: One Pixel City a Week"
+        },
+        "bvid": "BV1GJ411x7h7",
+        "page": 1,
+        "cover": {
+          "src": "/assets/images/video-1.svg",
+          "alt": {
+            "zh": "视频封面：发光的环形城市",
+            "en": "Video cover: a glowing ring city"
+          }
+        },
+        "more": "/videos",
+        "altLinks": [
+          {
+            "label": {
+              "zh": "去 B 站催更",
+              "en": "Nag me on Bilibili"
+            },
+            "url": "https://space.bilibili.com/1800000"
+          }
+        ]
+      },
+      {
+        "type": "services",
+        "title": {
+          "zh": "我能做什么",
+          "en": "What I Do"
+        },
+        "items": [
+          {
+            "icon": "image",
+            "title": {
+              "zh": "AI 视觉设计",
+              "en": "AI Visual Design"
+            },
+            "desc": {
+              "zh": "海报 / 封面 / 品牌插画：从提示词工程到 LoRA 训练，交付可商用的高完成度画面。",
+              "en": "Posters, covers and brand illustration: from prompt engineering to LoRA training, delivered at commercial finish."
+            }
+          },
+          {
+            "icon": "video",
+            "title": {
+              "zh": "AI 短片制作",
+              "en": "AI Short Films"
+            },
+            "desc": {
+              "zh": "图生视频 + 声音设计，为品牌与个人讲述 60 秒内讲得完的好故事。",
+              "en": "Image-to-video with sound design — good stories told within 60 seconds for brands and individuals."
+            }
+          },
+          {
+            "icon": "wand",
+            "title": {
+              "zh": "工作流搭建",
+              "en": "Workflow Design"
+            },
+            "desc": {
+              "zh": "ComfyUI / 批量生成管线搭建与教学，把重复劳动交给机器，把时间还给创意。",
+              "en": "ComfyUI and batch-generation pipelines, plus training — let machines do the repetitive part."
+            }
+          },
+          {
+            "icon": "message",
+            "title": {
+              "zh": "创作咨询",
+              "en": "Creative Consulting"
+            },
+            "desc": {
+              "zh": "帮你判断哪些环节值得引入 AI：选型、成本、版权边界，一次讲清楚。",
+              "en": "Figure out where AI truly helps: tooling, cost and copyright boundaries, explained in one session."
+            }
+          }
+        ]
+      },
+      {
+        "type": "stats",
+        "items": [
+          {
+            "value": 320,
+            "suffix": "+",
+            "label": {
+              "zh": "完成委托",
+              "en": "Commissions done"
+            }
+          },
+          {
+            "value": 48,
+            "suffix": "M+",
+            "label": {
+              "zh": "全网播放",
+              "en": "Total views"
+            }
+          },
+          {
+            "value": 120,
+            "suffix": "+",
+            "label": {
+              "zh": "合作方",
+              "en": "Collaborators"
+            }
+          },
+          {
+            "value": 6,
+            "suffix": "yr",
+            "label": {
+              "zh": "创作年限",
+              "en": "Years creating"
+            }
+          }
+        ]
+      },
+      {
+        "type": "ctaBanner",
+        "title": {
+          "zh": "有一个想做的东西？一起吧。",
+          "en": "Got something in mind? Let's build it."
+        },
+        "desc": {
+          "zh": "无论是一张图、一支片子还是一整条生产管线，都欢迎带着想法来聊。",
+          "en": "A single image, a short film, or a whole production pipeline — bring the idea, we'll shape it together."
+        },
+        "image": {
+          "src": "/assets/images/cta.svg"
+        },
+        "cta": [
+          {
+            "label": {
+              "zh": "发起合作",
+              "en": "Start a project"
+            },
+            "url": "/about#contact",
+            "style": "primary"
+          },
+          {
+            "label": {
+              "zh": "先看看作品",
+              "en": "Browse works first"
+            },
+            "url": "/works",
+            "style": "ghost"
+          }
+        ]
+      }
+    ]
+  },
+  "works": {
+    "title": {
+      "zh": "作品集",
+      "en": "Works"
+    },
+    "desc": {
+      "zh": "个人创作与商业委托并存。用标签筛选你感兴趣的领域：插画、视频、品牌或实验项目。",
+      "en": "Personal pieces and client work side by side. Filter by the tags you care about: illustration, video, branding or experiments."
+    },
+    "items": [
+      {
+        "id": "star-ring",
+        "title": {
+          "zh": "星环之城",
+          "en": "City of the Star Ring"
+        },
+        "year": 2025,
+        "tags": [
+          {
+            "zh": "插画",
+            "en": "Illustration"
+          },
+          {
+            "zh": "个人项目",
+            "en": "Personal"
+          },
+          {
+            "zh": "Midjourney",
+            "en": "Midjourney"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-1.svg",
+          "alt": {
+            "zh": "悬浮在星环下的发光城市插画",
+            "en": "Glowing city under a star ring"
+          }
+        },
+        "desc": {
+          "zh": "「轨道城市」系列第一张：MJ 出图 + SD 局部重绘 + 手工修正透视图层，共 4 版迭代。",
+          "en": "First of the 'Orbital City' series: MJ base, SD inpainting, hand-fixed perspective — 4 iterations."
+        }
+      },
+      {
+        "id": "neon-grid",
+        "title": {
+          "zh": "霓虹网格 · 观测站",
+          "en": "Neon Grid: Observatory"
+        },
+        "year": 2025,
+        "tags": [
+          {
+            "zh": "插画",
+            "en": "Illustration"
+          },
+          {
+            "zh": "商用委托",
+            "en": "Client"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-2.svg",
+          "alt": {
+            "zh": "赛博风格观测站插画",
+            "en": "Cyberpunk observatory illustration"
+          }
+        },
+        "desc": {
+          "zh": "为某科技播客视觉升级绘制的频道主视觉，交付横竖两版与动态封面。",
+          "en": "Key visual for a tech podcast revamp — delivered in landscape, portrait and animated cover."
+        }
+      },
+      {
+        "id": "gold-ridge",
+        "title": {
+          "zh": "山脊线 · 品牌视觉",
+          "en": "Gold Ridge: Brand Visuals"
+        },
+        "year": 2024,
+        "tags": [
+          {
+            "zh": "品牌",
+            "en": "Branding"
+          },
+          {
+            "zh": "商用委托",
+            "en": "Client"
+          },
+          {
+            "zh": "LoRA 训练",
+            "en": "LoRA"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-3.svg",
+          "alt": {
+            "zh": "暗金色调山脊线视觉",
+            "en": "Gold-toned mountain ridge visual"
+          }
+        },
+        "desc": {
+          "zh": "用客户提供的 40 张历史海报训练专属 LoRA，让新物料延续品牌的「山」母题。",
+          "en": "Trained a bespoke LoRA on 40 legacy posters so new assets keep the brand's 'mountain' motif."
+        }
+      },
+      {
+        "id": "ink-minimal",
+        "title": {
+          "zh": "留白 · 概念海报",
+          "en": "Blank Space: Concept Poster"
+        },
+        "year": 2024,
+        "tags": [
+          {
+            "zh": "实验",
+            "en": "Experimental"
+          },
+          {
+            "zh": "个人项目",
+            "en": "Personal"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-4.svg",
+          "alt": {
+            "zh": "留白风格的极简海报",
+            "en": "Minimal poster with blank space"
+          }
+        },
+        "desc": {
+          "zh": "实验「负提示词」画法：只描述不要什么，看模型自己会长成什么样。",
+          "en": "A 'negative prompt only' experiment: describe what NOT to draw and see what grows."
+        }
+      },
+      {
+        "id": "sunset-bloom",
+        "title": {
+          "zh": "暮色生长",
+          "en": "Sunset Bloom"
+        },
+        "year": 2024,
+        "tags": [
+          {
+            "zh": "插画",
+            "en": "Illustration"
+          },
+          {
+            "zh": "个人项目",
+            "en": "Personal"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-5.svg",
+          "alt": {
+            "zh": "暮色中生长的发光植物",
+            "en": "Glowing plants growing at dusk"
+          }
+        },
+        "desc": {
+          "zh": "每日一图计划第 47 天：用同一条种子跑出四季版本，这是秋。",
+          "en": "Day 47 of a daily-image streak: one seed across four seasons — this is autumn."
+        }
+      },
+      {
+        "id": "wave-aurora",
+        "title": {
+          "zh": "极光波形",
+          "en": "Aurora Waveform"
+        },
+        "year": 2023,
+        "tags": [
+          {
+            "zh": "视频",
+            "en": "Video"
+          },
+          {
+            "zh": "商用委托",
+            "en": "Client"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-6.svg",
+          "alt": {
+            "zh": "极光般的声波可视化",
+            "en": "Aurora-like audio waveform"
+          }
+        },
+        "desc": {
+          "zh": "为音乐人生成的专辑视觉izer：AI 关键帧 + AE 重定时，成片 90 秒。",
+          "en": "Album visualizer for a musician: AI keyframes + AE retiming, 90 seconds final cut."
+        }
+      },
+      {
+        "id": "mail-motion",
+        "title": {
+          "zh": "信笺动画",
+          "en": "Letter in Motion"
+        },
+        "year": 2023,
+        "tags": [
+          {
+            "zh": "视频",
+            "en": "Video"
+          },
+          {
+            "zh": "个人项目",
+            "en": "Personal"
+          },
+          {
+            "zh": "Runway",
+            "en": "Runway"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-7.svg",
+          "alt": {
+            "zh": "金色信笺动画封面",
+            "en": "Golden letter animation cover"
+          }
+        },
+        "desc": {
+          "zh": "图生视频早期尝试：让一张静态信笺学会呼吸，B 站播放 12w。",
+          "en": "Early image-to-video test: teaching a still letter to breathe — 120k views on Bilibili."
+        }
+      },
+      {
+        "id": "cube-synth",
+        "title": {
+          "zh": "立方合成器",
+          "en": "Cube Synth"
+        },
+        "year": 2023,
+        "tags": [
+          {
+            "zh": "实验",
+            "en": "Experimental"
+          },
+          {
+            "zh": "个人项目",
+            "en": "Personal"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/work-8.svg",
+          "alt": {
+            "zh": "悬浮立方体合成器概念图",
+            "en": "Floating cube synth concept"
+          }
+        },
+        "desc": {
+          "zh": "给 ComfyUI 写的自定义节点之一：把生成图实时变成 3D 立方体贴图。",
+          "en": "One of my ComfyUI custom nodes: turns generated images into live 3D cube textures."
+        }
+      }
+    ]
+  },
+  "videos": {
+    "title": {
+      "zh": "视频创作",
+      "en": "Videos"
+    },
+    "desc": {
+      "zh": "教程 / 幕后 / Vlog：记录 AI 创作的完整过程。视频托管在 B 站，点击卡片即可站内播放。",
+      "en": "Tutorials, behind-the-scenes and vlogs: the full process of AI creation. Hosted on Bilibili — click a card to play inline."
+    },
+    "items": [
+      {
+        "id": "pixel-city",
+        "bvid": "BV1GJ411x7h7",
+        "page": 1,
+        "title": {
+          "zh": "一周一座「像素城」Ep.01",
+          "en": "One Pixel City a Week Ep.01"
+        },
+        "desc": {
+          "zh": "从空白画布到会发光的城市：完整的提示词迭代过程与踩坑记录。",
+          "en": "From blank canvas to a glowing city: the full prompt-iteration process and pitfalls."
+        },
+        "tags": [
+          {
+            "zh": "教程",
+            "en": "Tutorial"
+          },
+          {
+            "zh": "Midjourney",
+            "en": "Midjourney"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/video-1.svg",
+          "alt": {
+            "zh": "视频封面：环形城市",
+            "en": "Cover: ring city"
+          }
+        }
+      },
+      {
+        "id": "comfyui-101",
+        "bvid": "BV1GJ411x7h7",
+        "page": 2,
+        "title": {
+          "zh": "ComfyUI 入门 30 分钟",
+          "en": "ComfyUI in 30 Minutes"
+        },
+        "desc": {
+          "zh": "从安装到第一条批量化工作流，把「抽卡」变成「流水线」。",
+          "en": "From install to your first batch pipeline: turn gacha into an assembly line."
+        },
+        "tags": [
+          {
+            "zh": "教程",
+            "en": "Tutorial"
+          },
+          {
+            "zh": "工作流",
+            "en": "Workflow"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/video-2.svg",
+          "alt": {
+            "zh": "视频封面：青色波形",
+            "en": "Cover: cyan waves"
+          }
+        }
+      },
+      {
+        "id": "bts-sunset",
+        "bvid": "BV1GJ411x7h7",
+        "page": 3,
+        "title": {
+          "zh": "《暮色生长》幕后",
+          "en": "Behind 'Sunset Bloom'"
+        },
+        "desc": {
+          "zh": "一张图改 37 版是什么体验？种子、参数与取舍全公开。",
+          "en": "What does 37 revisions of one image feel like? Seeds, params and trade-offs, all revealed."
+        },
+        "tags": [
+          {
+            "zh": "幕后",
+            "en": "Behind the scenes"
+          },
+          {
+            "zh": "个人项目",
+            "en": "Personal"
+          }
+        ],
+        "cover": {
+          "src": "/assets/images/video-3.svg",
+          "alt": {
+            "zh": "视频封面：粉色光轨",
+            "en": "Cover: pink light trails"
+          }
+        }
+      }
+    ]
+  },
+  "about": {
+    "avatar": {
+      "src": "/assets/images/avatar.svg",
+      "alt": {
+        "zh": "祺士的头像插画",
+        "en": "QiShi's avatar illustration"
+      }
+    },
+    "name": {
+      "zh": "祺士",
+      "en": "QiShi"
+    },
+    "role": {
+      "zh": "AIGC 独立创作者 / Agent工程师",
+      "en": "Independent AIGC Creator / Workflow Engineer"
+    },
+    "bio": [
+      {
+        "zh": "从平面设计转行到 AIGC，六年间从「第一个 prompt」做到「第一条生产管线」。我相信 AI 不是替代创作，而是把创作里最枯燥的部分自动化，让人留在真正做判断的位置上。",
+        "en": "From graphic design to AIGC — six years from 'my first prompt' to 'my first production pipeline'. I believe AI doesn't replace creativity; it automates the boring parts so humans stay where judgment matters."
+      },
+      {
+        "zh": "长期更新教程与幕后记录，也接品牌视觉、短片与工作流咨询。工作语言：中文 / English。",
+        "en": "I publish tutorials and behind-the-scenes regularly, and take on brand visuals, short films and workflow consulting. Working languages: Chinese / English."
+      }
+    ],
+    "location": {
+      "zh": "中国 · 杭州",
+      "en": "Hangzhou, China"
+    },
+    "status": {
+      "zh": "当前：可接受 1 个新项目",
+      "en": "Now: open to 1 new project"
+    },
+    "skills": {
+      "title": {
+        "zh": "能力雷达",
+        "en": "Skill Radar"
+      },
+      "groups": [
+        {
+          "name": {
+            "zh": "创作",
+            "en": "Creative"
+          },
+          "items": [
+            {
+              "name": {
+                "zh": "提示词工程",
+                "en": "Prompt Engineering"
+              },
+              "level": 95
+            },
+            {
+              "name": {
+                "zh": "视觉设计",
+                "en": "Visual Design"
+              },
+              "level": 88
+            },
+            {
+              "name": {
+                "zh": "视频叙事",
+                "en": "Video Storytelling"
+              },
+              "level": 80
+            }
+          ]
+        },
+        {
+          "name": {
+            "zh": "技术",
+            "en": "Technical"
+          },
+          "items": [
+            {
+              "name": {
+                "zh": "ComfyUI / SD",
+                "en": "ComfyUI / SD"
+              },
+              "level": 92
+            },
+            {
+              "name": {
+                "zh": "LoRA 训练",
+                "en": "LoRA Training"
+              },
+              "level": 78
+            },
+            {
+              "name": {
+                "zh": "前端开发",
+                "en": "Frontend Dev"
+              },
+              "level": 70
+            }
+          ]
+        }
+      ]
+    },
+    "toolsTitle": {
+      "zh": "日常工具链",
+      "en": "Daily Toolchain"
+    },
+    "tools": [
+      {
+        "zh": "Midjourney",
+        "en": "Midjourney"
+      },
+      {
+        "zh": "Stable Diffusion",
+        "en": "Stable Diffusion"
+      },
+      {
+        "zh": "ComfyUI",
+        "en": "ComfyUI"
+      },
+      {
+        "zh": "Runway",
+        "en": "Runway"
+      },
+      {
+        "zh": "可灵",
+        "en": "Kling"
+      },
+      {
+        "zh": "Photoshop",
+        "en": "Photoshop"
+      },
+      {
+        "zh": "After Effects",
+        "en": "After Effects"
+      },
+      {
+        "zh": "Vue 3",
+        "en": "Vue 3"
+      },
+      {
+        "zh": "Figma",
+        "en": "Figma"
+      }
+    ],
+    "timelineTitle": {
+      "zh": "创作历程",
+      "en": "Journey"
+    },
+    "timeline": [
+      {
+        "year": "2020",
+        "title": {
+          "zh": "第一次接触生成模型",
+          "en": "First touch of generative models"
+        },
+        "desc": {
+          "zh": "还在设计公司画 banner 的我，被 GAN 生成的第一张人脸震撼，开始自学。",
+          "en": "Still designing banners at an agency — one GAN face was all it took. Self-taught from there."
+        }
+      },
+      {
+        "year": "2022",
+        "title": {
+          "zh": "全职转向 AIGC",
+          "en": "Went full-time AIGC"
+        },
+        "desc": {
+          "zh": "Stable Diffusion 开源后辞职，接下第一单商稿：一套 40 张的食品海报。",
+          "en": "Quit after SD went open-source. First client gig: a 40-piece food poster set."
+        }
+      },
+      {
+        "year": "2023",
+        "title": {
+          "zh": "开始做视频与教学",
+          "en": "Started video & teaching"
+        },
+        "desc": {
+          "zh": "B 站首支教程破 10w 播放，工作流咨询成为固定业务线。",
+          "en": "First tutorial passed 100k views on Bilibili; workflow consulting became a steady line."
+        }
+      },
+      {
+        "year": "2025",
+        "title": {
+          "zh": "建立个人站",
+          "en": "Built this portfolio"
+        },
+        "desc": {
+          "zh": "把散落各处的作品、视频与思考收拢到一个可切换主题的小宇宙。",
+          "en": "Gathered scattered works, videos and notes into one small, theme-switchable universe."
+        }
+      }
+    ],
+    "contact": {
+      "title": {
+        "zh": "聊聊你的想法",
+        "en": "Let's talk about your idea"
+      },
+      "desc": {
+        "zh": "邮件通常 24 小时内回复；也可以在 B 站私信找到我。",
+        "en": "Emails answered within 24 hours; Bilibili DMs work too."
+      },
+      "cta": {
+        "label": {
+          "zh": "在 B 站找我",
+          "en": "Find me on Bilibili"
+        },
+        "url": "https://space.bilibili.com/1800000"
+      }
+    }
+  }
+}

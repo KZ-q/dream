@@ -1,0 +1,243 @@
+/* ===== 基础样式与公共元件（按钮/卡片/区块/动效全站唯一语言） ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--t-med) var(--ease), color var(--t-med) var(--ease);
+}
+#app {
+  position: relative;
+  z-index: 1;
+}
+img {
+  max-width: 100%;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font-family: inherit;
+}
+::selection {
+  background: var(--c-primary);
+  color: #fff;
+}
+:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 32px);
+}
+.section {
+  padding-block: var(--section-gap);
+}
+
+.kicker {
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.display {
+  font-family: var(--font-display);
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-tracking);
+  font-weight: var(--display-weight);
+  line-height: 1.08;
+  margin: 0;
+  white-space: pre-line;
+}
+.section-title {
+  font-size: clamp(26px, 3.6vw, 40px);
+}
+.lead {
+  color: var(--c-muted);
+  font-size: 17px;
+}
+
+/* 子页页首（作品/视频/关于共用） */
+.page-hero {
+  padding-top: calc(68px + clamp(48px, 8vw, 96px));
+  padding-bottom: clamp(20px, 4vw, 44px);
+}
+.page-hero .lead {
+  max-width: 640px;
+}
+
+.sec-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+.sec-head .more {
+  color: var(--c-accent);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.sec-head .more:hover {
+  text-decoration: underline;
+}
+
+/* 按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 30px;
+  border-radius: var(--radius-btn);
+  font-weight: 700;
+  letter-spacing: var(--btn-tracking);
+  border: 1px solid transparent;
+  cursor: pointer;
+  clip-path: var(--btn-clip);
+  font-size: 15px;
+  background: none;
+  color: inherit;
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn-primary {
+  background: var(--grad-btn);
+  color: #fff;
+}
+[data-preset='paper'] .btn-primary {
+  color: #f6f4ef;
+}
+.btn-primary:hover {
+  box-shadow: 0 0 28px color-mix(in srgb, var(--c-accent) 45%, transparent);
+}
+.btn-ghost {
+  border-color: var(--c-line);
+  background: transparent;
+}
+.btn-ghost:hover {
+  border-color: var(--c-primary);
+}
+
+/* 卡片与胶囊 */
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  transition: transform var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease);
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--c-primary) 55%, transparent);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--c-muted);
+}
+
+/* 标签筛选 */
+.tagbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: clamp(24px, 3vw, 36px);
+}
+.tagbar button {
+  padding: 7px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--c-line);
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.tagbar button:hover {
+  color: var(--c-text);
+  border-color: color-mix(in srgb, var(--c-primary) 60%, transparent);
+  transform: translateY(-1px);
+}
+.tagbar button.on {
+  color: #fff;
+  background: var(--grad-btn);
+  border-color: transparent;
+}
+[data-preset='paper'] .tagbar button.on {
+  color: #f6f4ef;
+}
+
+/* 入场动效：全站唯一模式（fade + rise 24px） */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--t-med) var(--ease), transform var(--t-med) var(--ease);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 状态点呼吸（唯一循环点动效） */
+@keyframes breathe {
+  50% {
+    opacity: 0.4;
+  }
+}
+@keyframes floaty {
+  50% {
+    transform: translate(-50%, 6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .grad-anim,
+  body::before {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

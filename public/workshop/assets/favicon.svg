@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="孔诸祺 · AIGC FILM">
+  <!-- 站点 favicon：曜石墨圆角底 + 冷银 45° 菱形（与导航栏 logo-dot 同一视觉语言） -->
+  <rect width="64" height="64" rx="14" fill="#0b0c0e"/>
+  <rect x="21" y="21" width="22" height="22" rx="4" fill="#d3d8df" transform="rotate(45 32 32)"/>
+</svg>

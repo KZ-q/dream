@@ -1,0 +1,33 @@
+# ---------- 依赖 ----------
+node_modules/
+
+# ---------- 构建产物 ----------
+dist/
+dist-ssr/
+
+# ---------- 项目内的历史副本（冗余）----------
+# 这是早期版本的整份拷贝，自带独立的 node_modules，与根目录源码重复。
+# 保留在磁盘上无妨，但绝对不要提交。
+Craftfolio-main/
+
+# ---------- 运行时 / 临时文件 ----------
+shots/
+*.log
+.tmp-*
+smoke-report.txt
+smoke-run.log
+workshop-report.txt
+# 内容工坊每次「保存」前的自动备份（studio/server.mjs 生成），属运行时产物
+public/workshop/content.backup.json
+public/content/content.backup.json
+
+# ---------- 本地环境变量（含密钥，切勿提交）----------
+.env
+.env.local
+
+# ---------- 编辑器 / 系统 ----------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

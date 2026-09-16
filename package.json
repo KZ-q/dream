@@ -1,0 +1,31 @@
+{
+  "name": "ai-creator-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AIGC creator personal portfolio — pure frontend, bilingual (zh/en), 5 theme presets, Bilibili embeds, zero backend",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "node scripts/check-content.mjs",
+    "shots": "node scripts/screenshot.mjs",
+    "test:smoke": "node scripts/smoke.mjs",
+    "test:workshop": "node scripts/smoke-workshop.mjs"
+  },
+  "dependencies": {
+    "@fontsource/baloo-2": "^5.0.0",
+    "@fontsource/cinzel": "^5.0.0",
+    "@fontsource/playfair-display": "^5.0.0",
+    "@fontsource/rajdhani": "^5.0.0",
+    "@fontsource/space-grotesk": "^5.0.0",
+    "gifenc": "1.0.3",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "playwright-core": "^1.62.1",
+    "vite": "^6.3.5"
+  }
+}

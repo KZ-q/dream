@@ -1,0 +1,226 @@
+/* ============================================================
+   五套主题预设 tokens
+   aurora（极光霓虹）/ cyber（赛博网格）/ gold（暗金质感）
+   / paper（极简纸白）/ sunset（落日渐变）
+   默认由 content.json 的 theme.preset 设定；导航栏可实时切换
+   （localStorage 记忆）；theme.colors / fonts / layout 逐项内联覆盖。
+   ============================================================ */
+
+:root {
+  /* 全局动效 tokens（唯一 easing + 三档时长） */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 150ms;
+  --t-med: 400ms;
+  --t-slow: 700ms;
+  --section-gap: clamp(64px, 10vw, 128px);
+  --max-width: 1200px;
+  --grad-display: linear-gradient(120deg, var(--c-primary), var(--c-accent));
+  --grad-btn: linear-gradient(120deg, var(--c-primary), var(--c-primary-strong));
+}
+
+/* 1) aurora 极光霓虹 —— 深空紫青，光晕漂移（默认） */
+:root,
+[data-preset='aurora'] {
+  --c-bg: #0a0a18;
+  --c-surface: rgba(255, 255, 255, 0.05);
+  --c-primary: #8b7cff;
+  --c-primary-strong: #b18cff;
+  --c-accent: #4cc9f0;
+  --c-text: #f1f1fb;
+  --c-muted: #a2a3c4;
+  --c-line: rgba(255, 255, 255, 0.1);
+
+  --font-display: 'Space Grotesk', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --display-transform: none;
+  --display-tracking: 0.01em;
+  --display-weight: 700;
+
+  --radius-card: 18px;
+  --radius-btn: 999px;
+  --btn-clip: none;
+  --btn-tracking: 0.02em;
+
+  --texture-default: aurora;
+}
+
+/* 2) cyber 赛博网格 —— 冷黑青荧光，切割按钮 */
+[data-preset='cyber'] {
+  --c-bg: #05080d;
+  --c-surface: rgba(255, 255, 255, 0.045);
+  --c-primary: #00e5ff;
+  --c-primary-strong: #5cffd6;
+  --c-accent: #00e5ff;
+  --c-text: #e8fbff;
+  --c-muted: #7fa2b0;
+  --c-line: rgba(255, 255, 255, 0.09);
+
+  --font-display: 'Rajdhani', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --display-transform: uppercase;
+  --display-tracking: 0.03em;
+  --display-weight: 700;
+
+  --radius-card: 10px;
+  --radius-btn: 8px;
+  --btn-clip: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  --btn-tracking: 0.06em;
+
+  --texture-default: cyber;
+}
+
+/* 3) gold 暗金质感 —— 黑金衬线，奢华编辑 */
+[data-preset='gold'] {
+  --c-bg: #0b0a07;
+  --c-surface: rgba(255, 255, 255, 0.04);
+  --c-primary: #d4af37;
+  --c-primary-strong: #f0d68a;
+  --c-accent: #e8c15a;
+  --c-text: #f2ead6;
+  --c-muted: #99917c;
+  --c-line: rgba(212, 175, 55, 0.18);
+
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', 'Songti SC', SimSun, serif;
+  --font-body: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --display-transform: uppercase;
+  --display-tracking: 0.06em;
+  --display-weight: 700;
+
+  --radius-card: 2px;
+  --radius-btn: 2px;
+  --btn-clip: none;
+  --btn-tracking: 0.08em;
+
+  --texture-default: gold;
+}
+
+/* 4) paper 极简纸白 —— 浅色编辑风，墨色 + 朱砂 */
+[data-preset='paper'] {
+  --c-bg: #f6f4ef;
+  --c-surface: rgba(18, 18, 22, 0.035);
+  --c-primary: #191a1e;
+  --c-primary-strong: #3a3c44;
+  --c-accent: #c8452c;
+  --c-text: #17181c;
+  --c-muted: #6f6e6a;
+  --c-line: rgba(20, 20, 24, 0.12);
+
+  --font-display: 'Playfair Display', Georgia, 'Songti SC', SimSun, serif;
+  --font-body: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --display-transform: none;
+  --display-tracking: 0;
+  --display-weight: 700;
+
+  --radius-card: 4px;
+  --radius-btn: 4px;
+  --btn-clip: none;
+  --btn-tracking: 0.04em;
+
+  --texture-default: paper;
+}
+
+/* 5) sunset 落日渐变 —— 暖橙粉，圆润友好 */
+[data-preset='sunset'] {
+  --c-bg: #150d10;
+  --c-surface: rgba(255, 255, 255, 0.05);
+  --c-primary: #ff8a5c;
+  --c-primary-strong: #ffb45c;
+  --c-accent: #ff5c8a;
+  --c-text: #fff2ea;
+  --c-muted: #c4a294;
+  --c-line: rgba(255, 255, 255, 0.1);
+
+  --font-display: 'Baloo 2', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --display-transform: none;
+  --display-tracking: 0.01em;
+  --display-weight: 800;
+
+  --radius-card: 20px;
+  --radius-btn: 999px;
+  --btn-clip: none;
+  --btn-tracking: 0.02em;
+
+  --texture-default: sunset;
+}
+
+/* ===== 渐变展示字（仅 aurora / sunset 两套启用） ===== */
+[data-preset='aurora'] .display,
+[data-preset='sunset'] .display {
+  background: var(--grad-display);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.grad-anim {
+  animation: gradShift 9s ease-in-out infinite alternate;
+}
+@keyframes gradShift {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+/* cyber：标题霓虹微光 */
+[data-preset='cyber'] .display {
+  text-shadow: 0 0 24px color-mix(in srgb, var(--c-primary) 28%, transparent);
+}
+
+/* ===== 质感层（html[data-texture]，随预设自动跟随） ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--texture-image, none);
+  background-size: var(--texture-size, auto);
+  opacity: var(--texture-opacity, 0);
+}
+
+html[data-texture='aurora'] {
+  --texture-image: radial-gradient(52vw 44vh at 18% 10%, color-mix(in srgb, var(--c-primary) 15%, transparent), transparent 70%),
+    radial-gradient(48vw 40vh at 84% 82%, color-mix(in srgb, var(--c-accent) 12%, transparent), transparent 70%),
+    radial-gradient(30vw 26vh at 70% 20%, color-mix(in srgb, var(--c-primary-strong) 7%, transparent), transparent 70%);
+  --texture-opacity: 1;
+}
+html[data-texture='aurora'] body::before {
+  animation: texDrift 26s ease-in-out infinite alternate;
+}
+@keyframes texDrift {
+  from {
+    background-position: 0% 0%, 100% 100%, 50% 0%;
+  }
+  to {
+    background-position: 10% 8%, 90% 90%, 58% 6%;
+  }
+}
+
+html[data-texture='cyber'] {
+  --texture-image: linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(60vw 40vh at 50% 0%, rgba(0, 229, 255, 0.06), transparent 70%);
+  --texture-size: 48px 48px, 48px 48px, auto;
+  --texture-opacity: 1;
+}
+
+html[data-texture='gold'] {
+  --texture-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  --texture-opacity: 0.06;
+}
+
+html[data-texture='paper'] {
+  --texture-image: radial-gradient(rgba(20, 20, 24, 0.09) 1px, transparent 1.2px);
+  --texture-size: 26px 26px;
+  --texture-opacity: 0.55;
+}
+
+html[data-texture='sunset'] {
+  --texture-image: radial-gradient(52vw 44vh at 14% 88%, color-mix(in srgb, var(--c-primary) 16%, transparent), transparent 70%),
+    radial-gradient(46vw 40vh at 88% 12%, color-mix(in srgb, var(--c-accent) 12%, transparent), transparent 70%);
+  --texture-opacity: 1;
+}
+html[data-texture='sunset'] body::before {
+  animation: texDrift 30s ease-in-out infinite alternate-reverse;
+}

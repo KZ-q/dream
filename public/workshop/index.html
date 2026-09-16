@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="孔诸祺 · AIGC 影像创作者个人站 — AI 短视频 / 视觉叙事 / 作品集" />
+  <title>孔诸祺 · AIGC 影像创作</title>
+
+  <!-- 站点图标：此前缺失，浏览器会退回请求 /favicon.ico 并 404（标签页无图标） -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="apple-touch-icon" href="assets/favicon.svg" />
+
+  <!-- 社交分享卡片（微信 / 微博 / X 抓取用）。
+       注意：og:image 与 og:url 必须是绝对地址，且社交平台爬虫不执行 JS，
+       无法用脚本按 location.origin 动态拼 —— 故此处写死主域名。
+       若日后更换主域名，需同步修改下面 4 处 URL。 -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="孔诸祺 · AIGC 影像创作" />
+  <meta property="og:title" content="孔诸祺 · AIGC 影像创作" />
+  <meta property="og:description" content="AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。以 AI 为笔，光影为墨。" />
+  <meta property="og:image" content="https://kongzhuqi-portfolio.app.workbuddy.host/assets/images/og-cover.jpg" />
+  <meta property="og:url" content="https://kongzhuqi-portfolio.app.workbuddy.host/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="孔诸祺 · AIGC 影像创作" />
+  <meta name="twitter:description" content="AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。" />
+  <meta name="twitter:image" content="https://kongzhuqi-portfolio.app.workbuddy.host/assets/images/og-cover.jpg" />
+  <meta name="theme-color" content="#0b0c0e" />
+
+  <link rel="preconnect" href="https://player.bilibili.com" crossorigin />
+  <!-- 展示字：Playfair Display（拉丁衬线，高级商务感）；中文回退宋体系。加载失败自动回退，不影响功能 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ============ 启动 / 标题画面（Splash Screen） ============ -->
+  <div class="splash" id="splash">
+    <div class="splash-bg"></div>
+    <div class="splash-content">
+      <div class="splash-logo">
+        <span class="logo-dot"></span>
+        孔诸祺<span>AIGC FILM</span>
+      </div>
+      <h1 class="splash-title">以 AI 为笔<em>光影为墨</em></h1>
+      <p class="splash-subtitle">AIGC VISUAL STORYTELLING · 2026</p>
+      <button class="splash-enter" id="splashEnter">ENTER · 进入</button>
+    </div>
+    <div class="splash-settings" id="splashSettings" title="设置">⚙</div>
+    <div class="splash-skip" id="splashSkip">点击任意处跳过 ▸</div>
+    <div class="splash-progress"><div class="splash-progress-bar" id="splashBar"></div></div>
+  </div>
+
+  <!-- 顶部滚动进度条 -->
+  <div class="scroll-progress" id="progress"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ============ 顶部导航栏（CardNav 卡片导航：汉堡展开三张分类卡，移植自 react-bits） ============ -->
+  <header class="navbar" id="navbar">
+    <nav class="card-nav" id="cardNav" aria-label="主导航">
+      <div class="card-nav-top">
+        <button class="hamburger-menu" id="cnHamburger" type="button" aria-label="打开菜单" aria-expanded="false">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+        <a href="#home" class="logo card-nav-logo">
+          <span class="logo-dot"></span>
+          孔诸祺<span class="logo-sub">AIGC FILM</span>
+        </a>
+        <!-- 右侧按钮组：工坊入口（左）+ 合作洽谈（右） -->
+        <div class="card-nav-actions">
+          <a href="edit" target="_blank" rel="noopener" class="card-nav-workshop" title="打开可视化修改工坊">⚙ <span>工坊</span></a>
+          <a href="#contact" class="card-nav-cta">合作洽谈 <span class="cta-arrow">↗</span></a>
+        </div>
+      </div>
+      <div class="card-nav-content" id="cnContent" aria-hidden="true">
+        <div class="nav-card">
+          <div class="nav-card-label">创作 · WORKS</div>
+          <div class="nav-card-links">
+            <a class="nav-card-link" href="#works"><span class="nc-arrow">↗</span>精选作品</a>
+            <a class="nav-card-link" href="#movie"><span class="nc-arrow">↗</span>最新影片</a>
+            <a class="nav-card-link" href="#works" data-scroll-to="#motionBlock"><span class="nc-arrow">↗</span>动图实验</a>
+          </div>
+        </div>
+        <div class="nav-card">
+          <div class="nav-card-label">了解 · ABOUT</div>
+          <div class="nav-card-links">
+            <a class="nav-card-link" href="#about"><span class="nc-arrow">↗</span>关于我</a>
+            <a class="nav-card-link" href="#profile"><span class="nc-arrow">↗</span>个人简介</a>
+            <a class="nav-card-link" href="#topics"><span class="nc-arrow">↗</span>创作手记</a>
+          </div>
+        </div>
+        <div class="nav-card">
+          <div class="nav-card-label">联系 · CONTACT</div>
+          <div class="nav-card-links">
+            <a class="nav-card-link" href="#contact"><span class="nc-arrow">↗</span>合作洽谈</a>
+            <a class="nav-card-link" href="#contact"><span class="nc-arrow">↗</span>邮件 / 微信</a>
+            <a class="nav-card-link" href="#contact"><span class="nc-arrow">↗</span>抖音</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- 主内容包裹层：footer 全屏揭示时，此层整体向上滑开（实底 + 底部 100vh 留白） -->
+  <main id="pageContent">
+  <!-- ============ 1. 主视觉区 ============ -->
+  <section class="hero" id="home">
+    <div class="hero-bg" id="heroSlides"><!-- 由 JS 根据 hero.slides 生成轮播层（Carousel） --></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content reveal">
+      <span class="hero-badge" data-bind="hero.badge">OPEN FOR COMMISSIONS</span>
+      <h1 class="hero-title"><span data-bind="hero.title1">以 AI 为笔</span><span class="grad-text" data-bind="hero.title2">光影为墨</span></h1>
+      <p class="hero-subtitle" data-bind="hero.subtitle">你好，我是孔诸祺。一位 AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。<br />在这里，记录我与模型共同完成的每一次冒险。</p>
+      <div class="hero-cta">
+        <a href="#works" class="btn btn-primary">查看作品</a>
+        <a href="#about" class="btn btn-ghost">了解我</a>
+      </div>
+    </div>
+    <div class="hero-scroll">▾</div>
+  </section>
+
+  <!-- ============ 2. TOPICS 手记 ============ -->
+  <section class="section" id="topics">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-tag">TOPICS</span>
+        <h2 class="section-title">创作手记</h2>
+        <p class="section-desc">记录每一次生成背后的取舍与惊喜</p>
+      </div>
+      <div class="topics reveal" id="topicsList"><!-- 由 JS 根据 content.json 渲染 --></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. ABOUT ============ -->
+  <section class="section section-alt" id="about">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-tag">ABOUT</span>
+        <h2 class="section-title">关于我</h2>
+      </div>
+      <div class="quote-inner reveal" style="text-align:center">
+        <p data-bind="about.p1" style="margin-bottom:18px"></p>
+        <p data-bind="about.p2" style="color:var(--c-muted)"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. STORY 引言带 ============ -->
+  <section class="quote-band" id="storyBand">
+    <div class="quote-bg" id="storyBg" data-speed="0.25" style="background-image:url('assets/images/cover-waimai.jpg')"></div>
+    <div class="quote-inner reveal">
+      <q data-bind="story.quote"></q>
+      <span class="quote-by" data-bind="story.by">— 孔诸祺 · 创作手记</span>
+    </div>
+  </section>
+
+  <!-- ============ 5. ACTION 能力 ============ -->
+  <section class="section" id="action">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-tag">ACTION</span>
+        <h2 class="section-title">我能做什么</h2>
+      </div>
+      <div class="services-grid">
+        <div class="service-card reveal"><div class="service-icon">🗡️</div><h3>AI 短片创作</h3><p>从剧本分镜到成片输出，用即梦 / 可灵 / Runway 等工具完成完整的叙事短片。</p></div>
+        <div class="service-card reveal"><div class="service-icon">🛡️</div><h3>AI 视觉海报</h3><p>Midjourney / SD / Flux 生成电影级画面，可用于封面、海报与概念设计。</p></div>
+        <div class="service-card reveal"><div class="service-icon">🧭</div><h3>工作流搭建</h3><p>为团队定制 AIGC 生产流水线：提示词标准化、批量生成、后期精修。</p></div>
+        <div class="service-card reveal"><div class="service-icon">🎵</div><h3>AI 音乐创作</h3><p>用 AI 生成原创旋律与人声编排，为短片、宣传片定制专属配乐与氛围音轨。</p></div>
+      </div>
+
+      <!-- AI 音乐创作：与「碎片实验」同族的作品展示区
+           数据在 content.json 的 tracks 数组（title/desc/src/cover/tags）；
+           数组为空时整块隐藏（编辑器预览态显示空态引导）。 -->
+      <div class="music-block" id="musicBlock">
+        <div class="music-head reveal">
+          <span class="motion-tag">AI MUSIC</span>
+          <h3 class="motion-title">AI 音乐创作</h3>
+          <p class="motion-desc">从旋律到成曲 —— 用 AI 生成的原创配乐与氛围音轨，点开即可试听</p>
+        </div>
+        <div class="music-grid" id="musicGrid"><!-- 由 JS 渲染 --></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. WORKS 作品（由 JS 渲染） ============ -->
+  <section class="section section-alt" id="works">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-tag">WORKS</span>
+        <h2 class="section-title">精选作品</h2>
+        <p class="section-desc">点击任意作品，即可播放完整短片</p>
+      </div>
+      <!-- 作品漂移墙：3D 流动图墙（JS 根据 content.json 生成；悬停点亮，点击瓦片播放对应作品） -->
+      <div class="drift-wall reveal" id="driftWall" aria-label="作品漂移墙"></div>
+      <div class="works-grid" id="worksGrid"><!-- 由 JS 渲染 --></div>
+      <!-- 动图板块：竖屏短视频，静音循环自动播放（数据在 content.json 的 motion 数组，以后加作品往数组里加一条即可；数组清空时整块自动隐藏） -->
+      <div class="motion-block" id="motionBlock">
+        <div class="motion-head reveal">
+          <span class="motion-tag">MOTION CLIPS</span>
+          <h3 class="motion-title">动图 · 碎片实验</h3>
+          <p class="motion-desc">5 秒一循环的灵感切片——静音自动播放，点击可看有声版</p>
+        </div>
+        <div class="motion-grid" id="motionGrid"><!-- 由 JS 渲染 --></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. MOVIE 最新影片（由 JS 渲染） ============ -->
+  <section class="section" id="movie">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-tag">MOVIE</span>
+        <h2 class="section-title">最新影片</h2>
+      </div>
+      <div class="video-feature reveal" id="movieBlock"><!-- 由 JS 渲染 --></div>
+    </div>
+  </section>
+
+  <!-- ============ 8. PROFILE 个人简介（简历文字稿，由 JS 根据 content.json 的 profile 渲染；删除 profile 字段则整区隐藏） ============ -->
+  <section class="section profile-sec" id="profile">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-tag">PROFILE</span>
+        <h2 class="section-title">个人简介</h2>
+        <p class="section-desc">一页看懂我——简历文字稿与经历速览</p>
+      </div>
+      <div class="profile-wrap" id="profileWrap"><!-- 由 JS 渲染 --></div>
+    </div>
+  </section>
+
+  <!-- ============ 9. 联系方式 ============ -->
+  <section class="section section-alt" id="contact">
+    <div class="container">
+      <div class="about-wrap">
+        <div class="about-text reveal">
+          <span class="section-tag">CONTACT</span>
+          <h2 class="section-title">开始一次共创</h2>
+          <p>把你脑海里的画面讲给我听——哪怕只是一句话、一种感觉、一段模糊的记忆。剩下的，我们一起把它变成看得见的故事。</p>
+        </div>
+        <div class="about-card reveal">
+          <h3>合作洽谈</h3>
+          <p>短片定制 / 视觉设计 / 工作流咨询</p>
+          <ul class="contact-list">
+            <li>✉ 邮箱：<a href="#" id="contactEmail" data-bind="contact.email">hello@kongzhuqi.studio</a></li>
+            <li>▶ 抖音：<a href="#" data-bind="contact.douyin">@孔诸祺的 AI 片场</a></li>
+            <li>💬 微信：<a href="#" id="contactWechat" data-bind="contact.wechat">kongzhuqi_studio</a></li>
+          </ul>
+          <p class="contact-note">一般 24 小时内回复，请备注来意～</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ============ 页脚（Animated Footer：全屏揭示 + ASCII 双手 + SplitText 大标题） ============ -->
+  <footer class="footer" id="footer" aria-label="站点页脚">
+    <!-- 左 / 右手：ASCII 字符画 canvas（JS 实时绘制，鼠标移上成簇高亮） -->
+    <div class="hand hand-left"  id="handLeft"  aria-hidden="true"><canvas></canvas></div>
+    <div class="hand hand-right" id="handRight" aria-hidden="true"><canvas></canvas></div>
+
+    <div class="footer-top">
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="#works">作品集</a><a href="#movie">影片</a><a href="#topics">手记</a><a href="#contact">合作</a>
+      </nav>
+      <span class="footer-mark">ASCII · LIVE</span>
+    </div>
+
+    <p class="footer-blurb" id="blurb">
+      <span class="accent">孔诸祺 · AIGC 影像工作室</span>——以 AI 为笔、光影为墨，
+      <span class="dim">把一句提示词写成看得见的故事。本站作品均以 AI 生成 + 人工精修完成。</span>
+    </p>
+
+    <div class="footer-title-wrap">
+      <h1 class="footer-title" id="footerTitle">KONG / ZHUQI</h1>
+    </div>
+
+    <div class="footer-meta">
+      <span>© 2026 孔诸祺 · Built with HTML / CSS / JS</span>
+      <span><span class="dot">●</span> 双手实时绘制</span>
+    </div>
+  </footer>
+
+  <!-- ============ 视频弹窗 ============ -->
+  <div class="modal" id="videoModal">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" id="modalClose" aria-label="关闭">✕</button>
+      <div id="modalMedia"></div>
+      <h3 id="modalTitle"></h3>
+    </div>
+  </div>
+
+  <!-- 本地 vendor：GSAP + ScrollTrigger + SplitText + Lenis（Animated Footer 依赖，离线可跑） -->
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/SplitText.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

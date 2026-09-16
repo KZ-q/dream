@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#0a0a1e"/><stop offset="0.45" stop-color="#1a1145"/><stop offset="1" stop-color="#0d2440"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd9a0" stop-opacity="0.6"/><stop offset="0.45" stop-color="#f0b76a" stop-opacity="0.22"/><stop offset="1" stop-color="#f0b76a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="moon" cx="0.38" cy="0.34" r="0.75">
+      <stop offset="0" stop-color="#fff4dc"/><stop offset="0.7" stop-color="#ffe3b0"/><stop offset="1" stop-color="#f3c887"/>
+    </radialGradient>
+    <radialGradient id="neb1" cx="0.2" cy="0.32" r="0.52">
+      <stop offset="0" stop-color="#8b7cff" stop-opacity="0.55"/><stop offset="1" stop-color="#8b7cff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="neb2" cx="0.72" cy="0.6" r="0.55">
+      <stop offset="0" stop-color="#4cc9f0" stop-opacity="0.5"/><stop offset="1" stop-color="#4cc9f0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="aur1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b7cff" stop-opacity="0"/><stop offset="0.5" stop-color="#a78bff" stop-opacity="0.75"/><stop offset="1" stop-color="#4cc9f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="aur2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4cc9f0" stop-opacity="0"/><stop offset="0.55" stop-color="#6fd8f7" stop-opacity="0.55"/><stop offset="1" stop-color="#8b7cff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ridge1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c2160"/><stop offset="1" stop-color="#150f33"/>
+    </linearGradient>
+    <linearGradient id="ridge2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#181238"/><stop offset="1" stop-color="#0a0718"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#neb1)"/>
+  <rect width="1600" height="900" fill="url(#neb2)"/>
+
+  <!-- 月亮：大暖色月 + 双层光晕（呼应参考项目的金色明月） -->
+  <circle cx="1150" cy="232" r="330" fill="url(#glow)"/>
+  <circle cx="1150" cy="232" r="112" fill="url(#moon)"/>
+  <circle cx="1112" cy="204" r="17" fill="#eed9b4" opacity="0.75"/>
+  <circle cx="1180" cy="262" r="11" fill="#eed9b4" opacity="0.6"/>
+  <circle cx="1150" cy="292" r="7" fill="#eed9b4" opacity="0.5"/>
+
+  <!-- 极光带 -->
+  <path d="M-40 300 C 320 210, 640 350, 980 250 S 1500 130, 1660 210" fill="none" stroke="url(#aur1)" stroke-width="26" stroke-linecap="round" opacity="0.5"/>
+  <path d="M-40 380 C 300 300, 700 420, 1040 330 S 1520 230, 1660 300" fill="none" stroke="url(#aur2)" stroke-width="14" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- 星群 -->
+  <g fill="#ffffff">
+    <circle cx="120" cy="128" r="2.6" opacity="0.95"/><circle cx="320" cy="78" r="1.8" opacity="0.75"/>
+    <circle cx="520" cy="176" r="2.2" opacity="0.85"/><circle cx="760" cy="88" r="1.5" opacity="0.65"/>
+    <circle cx="900" cy="196" r="2.4" opacity="0.9"/><circle cx="1370" cy="120" r="2.1" opacity="0.85"/>
+    <circle cx="1490" cy="66" r="1.6" opacity="0.7"/><circle cx="220" cy="262" r="1.7" opacity="0.65"/>
+    <circle cx="640" cy="298" r="1.5" opacity="0.55"/><circle cx="1420" cy="330" r="1.5" opacity="0.6"/>
+    <circle cx="980" cy="90" r="1.4" opacity="0.7"/><circle cx="60" cy="360" r="1.6" opacity="0.6"/>
+  </g>
+  <!-- 流星 -->
+  <g>
+    <line x1="330" y1="150" x2="620" y2="96" stroke="#cfe6ff" stroke-width="2" opacity="0.8" stroke-linecap="round"/>
+    <circle cx="622" cy="95" r="3.2" fill="#ffffff" opacity="0.95"/>
+  </g>
+
+  <!-- 山脊：三层，前层带萤火微光 -->
+  <path d="M0 640 L220 508 L420 606 L640 462 L860 588 L1080 472 L1320 596 L1600 492 L1600 900 L0 900 Z" fill="url(#ridge1)" opacity="0.95"/>
+  <path d="M0 744 L260 636 L520 718 L800 596 L1060 700 L1300 616 L1600 700 L1600 900 L0 900 Z" fill="url(#ridge2)"/>
+  <g fill="#8b7cff">
+    <circle cx="300" cy="806" r="2.4" opacity="0.8"/><circle cx="420" cy="842" r="1.8" opacity="0.6"/>
+    <circle cx="900" cy="820" r="2" opacity="0.7"/><circle cx="1240" cy="848" r="2.4" opacity="0.75"/>
+  </g>
+</svg>

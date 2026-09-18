@@ -232,6 +232,23 @@
       "cover": "assets/images/cover-track03.jpg"
     }
   ],
+  "posters": [
+    {
+      "src": "assets/images/poster-suyan-white-tea.jpg",
+      "title": "溯颜 · 白茶净颜",
+      "desc": "ARCAÉ 溯颜 产品主视觉 —— 白茶的淡雅香气，触手可及的奢觉体验"
+    },
+    {
+      "src": "assets/images/poster-winter-solstice.jpg",
+      "title": "昼短情长 · 冬至",
+      "desc": "冬至团圆主视觉 —— 一盘饺子，热气里全是牵挂"
+    },
+    {
+      "src": "assets/images/poster-mid-autumn.jpg",
+      "title": "中秋团圆",
+      "desc": "取一抹月光，寄千里相思 —— 国风中秋主视觉"
+    }
+  ],
   "profile": {
     "name": "孔诸祺",
     "role": "AIGC 影像创作者 / 内容运营",

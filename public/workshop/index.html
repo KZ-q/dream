@@ -205,6 +205,27 @@
         </div>
         <div class="motion-grid" id="motionGrid"><!-- 由 JS 渲染 --></div>
       </div>
+
+      <!-- 视觉海报：轮播展示区（数据在 content.json 的 posters 数组 = src/title/desc；
+           数组为空时整块隐藏，编辑器预览态显示空态引导） -->
+      <div class="poster-block" id="posterBlock" hidden>
+        <div class="poster-head reveal">
+          <span class="motion-tag">KEY VISUALS</span>
+          <h3 class="motion-title">视觉海报</h3>
+          <p class="motion-desc">Midjourney / SD / Flux 生成的电影级画面 —— 点箭头或滑动浏览</p>
+        </div>
+        <div class="poster-carousel reveal" id="posterCarousel" tabindex="0"
+          role="region" aria-roledescription="carousel" aria-label="视觉海报轮播">
+          <div class="poster-viewport">
+            <div class="poster-track" id="posterTrack"><!-- 由 JS 渲染 --></div>
+            <!-- 箭头放进画框内：定位基准＝画框（而非整个轮播），底部指示点有无都不影响居中 -->
+            <button class="poster-nav prev" id="posterPrev" type="button" aria-label="上一张">‹</button>
+            <button class="poster-nav next" id="posterNext" type="button" aria-label="下一张">›</button>
+          </div>
+          <div class="poster-dots" id="posterDots"><!-- 由 JS 渲染 --></div>
+          <div class="poster-empty" id="posterEmpty"><!-- 空态（仅编辑器预览态可见） --></div>
+        </div>
+      </div>
     </div>
   </section>
 

@@ -1243,3 +1243,148 @@ img { display: block; max-width: 100%; }
   .music-play,
   .music-eq i { transition: none; animation: none; }
 }
+
+/* ============================================================
+   30) 视觉海报 .poster-block（竖版画框轮播）
+   - 海报天然是竖版（3:4 / 9:16）：画框定 3:4，主图 object-fit:contain
+     —— 永不裁切、永不变形。16:9 横版容器 + cover 会把竖版裁掉六成，是最容易犯的错。
+   - 留白处理：同图放大 + blur + 压暗做背景层，把两侧留白变成画面的氛围延伸
+     （素材比例与画框一致时，contain 正好铺满 → 零留白）
+   - 标题/说明用「展签」式排在画框内底部，不压画面（海报底部常自带文字）
+   - 轨道平移式轮播：viewport 裁切 + track 位移；箭头 / 指示点 / 键盘 / 触屏滑动
+   - 无数据时公开站整块隐藏，工坊预览态显示虚线空态引导
+   ============================================================ */
+.poster-block { margin-top: 76px; }
+.poster-block[hidden] { display: none; }
+.poster-head { text-align: center; margin-bottom: 40px; }
+
+/* 画框收窄居中：竖版海报要的是「画廊单幅」的聚焦感，不是铺满通栏 */
+.poster-carousel {
+  position: relative;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  outline: none;
+}
+.poster-viewport {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  background: #0b0c0e;
+  box-shadow: var(--shadow-soft);
+}
+.poster-carousel:focus-visible .poster-viewport {
+  border-color: var(--c-line-strong);
+  box-shadow: 0 0 0 2px var(--c-line-strong), var(--shadow-soft);
+}
+
+.poster-track { display: flex; height: 100%; transition: transform 0.72s var(--ease); will-change: transform; }
+.poster-slide {
+  position: relative; flex: 0 0 100%; margin: 0; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px 10px 0; box-sizing: border-box;
+}
+/* 氛围背景层：同图放大 + 模糊 + 压暗，垫在留白处（浏览器复用同一张图的缓存，不额外请求） */
+.poster-slide .poster-bg {
+  position: absolute; inset: -10%; z-index: 0;
+  background-size: cover; background-position: center;
+  filter: blur(26px) brightness(0.42) saturate(1.15);
+}
+.poster-slide .poster-img {
+  position: relative; z-index: 1;
+  flex: 1 1 auto; min-height: 0; width: 100%;
+  object-fit: contain; display: block;
+}
+
+/* 展签式说明：排在画框内底部（不再压在画面上，海报底部往往自带文案） */
+.poster-cap {
+  position: relative; z-index: 1; flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 14px 10px 12px; text-align: center;
+}
+.poster-cap strong {
+  font-family: var(--font-display); font-weight: 600; font-size: 18px;
+  letter-spacing: 0.05em; color: var(--c-primary-strong);
+}
+.poster-cap span {
+  max-width: 46ch; color: var(--c-muted); font-size: 12.5px;
+  line-height: 1.7; letter-spacing: 0.04em;
+}
+.poster-cap-no {
+  font-style: normal; font-size: 10.5px; letter-spacing: 0.2em;
+  color: var(--c-accent-dim); font-variant-numeric: tabular-nums;
+}
+
+/* 左右箭头：叠在画框内侧边缘，常态半透玻璃，悬停变银底黑字。
+   定位基准＝.poster-viewport（画框），故底部指示点有无都不影响垂直居中 */
+.poster-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  display: grid; place-items: center; padding: 0 0 3px;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--c-line-strong); background: rgba(11, 12, 14, 0.5);
+  color: var(--c-primary-strong); backdrop-filter: blur(6px);
+  font-size: 21px; line-height: 1; cursor: pointer;
+  transition: background 0.3s, color 0.3s, transform 0.3s var(--ease);
+}
+.poster-nav.prev { left: 12px; }
+.poster-nav.next { right: 12px; }
+.poster-nav:hover {
+  background: rgba(211, 216, 223, 0.94); color: var(--c-bg);
+  transform: translateY(-50%) scale(1.06);
+}
+.poster-nav:focus-visible { outline: 2px solid var(--c-line-strong); outline-offset: 2px; }
+
+/* 指示点：排在画框下方居中（像页码）；当前项拉长成短横（比单纯变色更醒目） */
+.poster-dots {
+  display: flex; justify-content: center; align-items: center;
+  gap: 8px; margin-top: 14px;
+}
+.poster-dots:empty { margin-top: 0; }   /* 只有 1 张时不留空档 */
+.poster-dots .pd {
+  width: 8px; height: 8px; padding: 0; cursor: pointer;
+  border: 1px solid var(--c-line-strong); border-radius: 999px;
+  background: rgba(11, 12, 14, 0.5);
+  transition: width 0.35s var(--ease), background 0.3s;
+}
+.poster-dots .pd.active { width: 26px; background: linear-gradient(90deg, var(--c-accent), var(--c-primary)); }
+.poster-dots .pd:focus-visible { outline: 2px solid var(--c-line-strong); outline-offset: 2px; }
+
+/* 空态（仅编辑器预览态可见）：去掉轮播外壳，只留虚线引导框 */
+.poster-empty:empty { display: none; }
+.poster-empty {
+  text-align: center; padding: 52px 26px;
+  border: 1px dashed var(--c-line); border-radius: var(--radius-card);
+}
+.poster-empty strong {
+  display: block; font-family: var(--font-display); font-size: 15px;
+  letter-spacing: 0.08em; color: var(--c-primary-strong); margin-bottom: 9px;
+}
+.poster-empty span { color: var(--c-muted); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.8; }
+/* 空态：宽度放开、画框塌陷（否则 3:4 的空画框会白占一屏） */
+.poster-carousel:has(.poster-empty:not(:empty)) { width: 100%; }
+.poster-carousel:has(.poster-empty:not(:empty)) .poster-viewport {
+  aspect-ratio: auto; border: 0; background: transparent; box-shadow: none;
+}
+.poster-carousel:has(.poster-empty:not(:empty)) .poster-nav,
+.poster-carousel:has(.poster-empty:not(:empty)) .poster-dots { display: none; }
+
+@media (max-width: 860px) {
+  .poster-block { margin-top: 56px; }
+  .poster-head { margin-bottom: 28px; }
+  .poster-carousel { width: min(100%, 420px); }
+  .poster-slide { padding: 8px 8px 0; }
+  .poster-cap { padding: 12px 8px 10px; }
+  .poster-cap strong { font-size: 16px; }
+  .poster-cap span { font-size: 12px; }
+  .poster-nav { width: 38px; height: 38px; font-size: 18px; }
+  .poster-nav.prev { left: 8px; }
+  .poster-nav.next { right: 8px; }
+  .poster-dots { margin-top: 12px; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster-track,
+  .poster-nav,
+  .poster-dots .pd { transition: none; }
+}

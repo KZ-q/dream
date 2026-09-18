@@ -17,7 +17,9 @@ if (hasFooterLibs) {
   gsap.registerPlugin(ScrollTrigger)
   lenis = new Lenis({ lerp: 0.09 })
   lenis.on('scroll', ScrollTrigger.update)
-  gsap.ticker.add((t) => lenis.raf(t * 1000))
+  /* 守卫：prefers-reduced-motion 下（§11.6）lenis 会被 destroy 并置 null，
+     但 ticker 回调仍在每帧执行 —— 不加守卫会 60fps 刷 "Cannot read properties of null (reading 'raf')" */
+  gsap.ticker.add((t) => { if (lenis) lenis.raf(t * 1000) })
   gsap.ticker.lagSmoothing(0)
 }
 /* 锚点跳转交给 Lenis（原生锚跳与平滑滚动会打架）；href="#" 的空链接放行 */
@@ -372,6 +374,143 @@ function playTrackFromWall(track) {
 function escHtml(s) {
   return String(s == null ? '' : s).replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
+
+/* ============================================================
+   10.5) 视觉海报：竖版画框轮播展示区
+   - 数据：content.json 的 posters[]（src / title / desc；src 为空的行自动忽略）
+   - 海报是竖版素材（3:4 / 9:16）：画框定 3:4 + 主图 object-fit:contain，
+     **绝不能**用 16:9 + cover —— 那样一张竖版海报会被裁掉约六成画面
+   - 窄屏/比例不符时用同图虚化做氛围背景垫留白（不是纯色，画面感更强）
+   - 轨道平移式轮播：箭头 / 指示点 / 键盘 ← → / 触屏滑动，鼠标悬停暂停
+   - 进视口才自动播放（省电省流量）；「减少动态」用户不自动播
+   - 空数据时公开站整块隐藏，编辑器预览态显示上传引导
+   ============================================================ */
+const posterRM = window.matchMedia('(prefers-reduced-motion: reduce)')
+let posterTrackEl = null
+let posterSlides = []
+let posterDotEls = []
+let posterIdx = 0
+let posterCount = 0
+let posterTimer = null
+let posterIO = null
+
+function posterGo(n) {
+  if (!posterCount || !posterTrackEl) return
+  posterIdx = ((n % posterCount) + posterCount) % posterCount   /* 循环取模，支持左右越界 */
+  posterTrackEl.style.transform = `translateX(-${posterIdx * 100}%)`
+  posterSlides.forEach((s, i) => {
+    s.classList.toggle('active', i === posterIdx)
+    s.setAttribute('aria-hidden', i === posterIdx ? 'false' : 'true')
+  })
+  posterDotEls.forEach((d, i) => {
+    d.classList.toggle('active', i === posterIdx)
+    d.setAttribute('aria-selected', i === posterIdx ? 'true' : 'false')
+  })
+}
+function posterStart() {
+  if (posterCount < 2 || posterTimer || posterRM.matches) return
+  posterTimer = setInterval(() => posterGo(posterIdx + 1), 6000)
+}
+function posterStop() { if (posterTimer) { clearInterval(posterTimer); posterTimer = null } }
+
+/* 属性值专用转义：escHtml 只转 <>，标题/说明是编辑器手输的，含引号会截断 alt="..." */
+function escAttr(s) {
+  return escHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+function renderPosters(list) {
+  const block = document.getElementById('posterBlock')
+  const track = document.getElementById('posterTrack')
+  const dots = document.getElementById('posterDots')
+  const emptyEl = document.getElementById('posterEmpty')
+  if (!block || !track) return
+  const items = Array.isArray(list) ? list.filter((p) => p && p.src) : []
+
+  posterStop()
+  if (posterIO) { posterIO.disconnect(); posterIO = null }
+
+  if (!items.length) {
+    /* 空：公开站点整块不出现（不留空白版块）；编辑器预览态给出上传引导 */
+    block.hidden = !wkPreviewMode
+    track.innerHTML = ''
+    if (dots) dots.innerHTML = ''
+    if (emptyEl) {
+      emptyEl.innerHTML = wkPreviewMode
+        ? `<strong>还没有海报</strong><span>打开顶栏 ⚙ 工坊 → 「⑮ 视觉海报」，拖入图片并填好标题与说明，保存后就会出现在这里。</span>`
+        : ''
+    }
+    posterTrackEl = null; posterSlides = []; posterDotEls = []
+    posterCount = 0; posterIdx = 0
+    return
+  }
+
+  block.hidden = false
+  if (emptyEl) emptyEl.innerHTML = ''
+  /* 竖版画框结构：氛围背景层（同图虚化，垫住两侧留白）+ 主图 contain（永不裁切）+ 展签式说明 */
+  track.innerHTML = items.map((p, i) => `
+    <figure class="poster-slide${i === 0 ? ' active' : ''}" data-idx="${i}" aria-hidden="${i === 0 ? 'false' : 'true'}">
+      <div class="poster-bg" style="background-image:url('${escAttr(p.src)}')" aria-hidden="true"></div>
+      <img class="poster-img" src="${escAttr(p.src)}" alt="${escAttr(p.title || '海报')}" loading="${i === 0 ? 'eager' : 'lazy'}" draggable="false" />
+      <figcaption class="poster-cap">
+        ${p.title ? `<strong>${escHtml(p.title)}</strong>` : ''}
+        ${p.desc ? `<span>${escHtml(p.desc)}</span>` : ''}
+        <i class="poster-cap-no">${String(i + 1).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}</i>
+      </figcaption>
+    </figure>`).join('')
+
+  if (dots) {
+    dots.innerHTML = items.length > 1
+      ? items.map((_, i) => `<button class="pd${i === 0 ? ' active' : ''}" type="button" data-i="${i}" aria-label="查看第 ${i + 1} 张海报"></button>`).join('')
+      : ''
+  }
+
+  posterTrackEl = track
+  posterCount = items.length
+  posterSlides = Array.from(track.querySelectorAll('.poster-slide'))
+  posterDotEls = dots ? Array.from(dots.querySelectorAll('.pd')) : []
+  posterIdx = 0
+  posterGo(0)
+
+  /* 事件：静态控件一律用覆盖式赋值 —— applyContent 会被工坊实时预览反复调用，
+     用 addEventListener 会不断叠加监听器（点一次翻好几张）。 */
+  const prev = document.getElementById('posterPrev')
+  const next = document.getElementById('posterNext')
+  const carousel = document.getElementById('posterCarousel')
+  if (prev) prev.onclick = () => { posterStop(); posterGo(posterIdx - 1); posterStart() }
+  if (next) next.onclick = () => { posterStop(); posterGo(posterIdx + 1); posterStart() }
+  posterDotEls.forEach((d) => {
+    d.onclick = () => { posterStop(); posterGo(+d.dataset.i); posterStart() }
+  })
+  if (carousel) {
+    /* 键盘 ← → 翻页（空格留给页面滚动，不抢占） */
+    carousel.onkeydown = (e) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); posterStop(); posterGo(posterIdx - 1); posterStart() }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); posterStop(); posterGo(posterIdx + 1); posterStart() }
+    }
+    /* 触屏滑动：横向位移 > 40px 且横向为主才翻页（否则让页面正常竖向滚动） */
+    let sx = 0, sy = 0
+    carousel.ontouchstart = (e) => { const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; posterStop() }
+    carousel.ontouchend = (e) => {
+      const t = e.changedTouches[0]
+      const dx = t.clientX - sx, dy = t.clientY - sy
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) posterGo(posterIdx + (dx < 0 ? 1 : -1))
+      posterStart()
+    }
+    /* 悬停暂停自动播放，让人读得完一张 */
+    carousel.onmouseenter = () => posterStop()
+    carousel.onmouseleave = () => posterStart()
+  }
+  /* 进视口才自动播；出视口自动停（与动图/首屏轮播同一套省电逻辑） */
+  if ('IntersectionObserver' in window) {
+    posterIO = new IntersectionObserver((entries) => {
+      entries.forEach((en) => { en.isIntersecting ? posterStart() : posterStop() })
+    }, { threshold: 0.25 })
+    posterIO.observe(block)
+  } else {
+    posterStart()
+  }
+}
+
 function renderProfile(p) {
   const sec = document.getElementById('profile')
   const wrap = document.getElementById('profileWrap')
@@ -429,6 +568,7 @@ function applyContent(c) {
   renderMovie(c.movie)
   renderMotion(c.motion)
   renderMusic(c.tracks)
+  renderPosters(c.posters)
   renderProfile(c.profile)
   initDriftWall(c)
   applyBackgrounds(c.backgrounds)

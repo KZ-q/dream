@@ -36,7 +36,8 @@ function emptyContent() {
     contact: { email: '', douyin: '', wechat: '' },
     backgrounds: {},
     motion: [],
-    tracks: []
+    tracks: [],
+    posters: []
   }
 }
 
@@ -278,6 +279,8 @@ async function onFilePicked(e) {
   if (kind === 'batch') { addFiles(files); return }
   /* 音乐作品音频（⑭） */
   if (kind === 'music') { addMusicFiles(files); return }
+  /* 视觉海报图片（⑮） */
+  if (kind === 'poster') { addPosterFiles(files); return }
   /* GIF 素材（⑫） */
   if (kind === 'gif-video') { pickGifVideo(files); return }
   if (kind === 'gif-images') { pickGifImages(files); return }
@@ -774,6 +777,152 @@ function moveTrack(i, dir) {
 }
 function trackName(t) {
   return String(t?.src || '').split('/').pop()
+}
+
+/* ============================================================
+   ⑮ 视觉海报：上传图片 → 站点「视觉海报」轮播板块
+   - 复用图片通道（assets/images/）：server 端 IMG_EXT + 5MB 校验已就位，无需改动
+   - 写入 form.posters[]：{ src, title, desc }
+   - 队列与「已加入」列表双向同步，避免两处改名后互相覆盖
+   ============================================================ */
+const POSTER_ACCEPT = '.png,.jpg,.jpeg,.webp,.gif,.avif,.svg,image/*'
+const POSTER_EXT_RE = /\.(png|jpe?g|webp|gif|avif|svg)$/i
+const MAX_POSTER_UPLOAD = 5 * 1024 * 1024      /* 与 studio/server.mjs 的 MAX_IMG 对齐 */
+const POSTER_TITLE_MAX = 40
+const POSTER_DESC_MAX = 120
+const POSTER_MAX_ITEMS = 20                    /* 轮播超过 20 张就没人翻得完了，编辑期直接拦住 */
+const posterQueue = ref([])
+const posterDragOver = ref(false)
+let posterSeq = 0
+/* 上传串行化：并发上传的完成顺序不定，会让人一次拖 5 张后轮播顺序随机。
+   串成一条 promise 链逐个上传，form.posters 的 push 顺序就等于选择顺序。 */
+let posterChain = Promise.resolve()
+function enqueuePoster(it) {
+  posterChain = posterChain.then(() => processPosterItem(it))
+}
+
+function pickPosterFiles() {
+  pickFiles(POSTER_ACCEPT, 'poster', () => {})
+}
+function onPosterDrop(e) {
+  posterDragOver.value = false
+  addPosterFiles(e.dataTransfer && e.dataTransfer.files)
+}
+function addPosterFiles(files) {
+  const list = [...(files || [])]
+  if (!list.length) return
+  const room = POSTER_MAX_ITEMS - (form.posters || []).length
+  if (room <= 0) {
+    status(`最多 ${POSTER_MAX_ITEMS} 张海报，请先删掉一些再加`, true)
+    return
+  }
+  if (list.length > room) {
+    status(`最多 ${POSTER_MAX_ITEMS} 张海报，本次只收前 ${room} 张`, true)
+    list.length = room
+  }
+  list.forEach((f) => {
+    const it = reactive({
+      id: 'po' + ++posterSeq,
+      file: f,
+      name: f.name,
+      size: f.size,
+      title: f.name.replace(/\.[^.]+$/, ''),
+      desc: '',
+      thumb: '',
+      path: '',
+      status: 'wait',
+      progress: 0,
+      err: ''
+    })
+    /* 前置体检：格式白名单 + 体积上限（原因都写成可读中文，用户能自己修） */
+    if (!POSTER_EXT_RE.test(f.name)) {
+      it.status = 'fail'
+      it.err = '格式不支持：仅收 png / jpg / jpeg / webp / gif / avif / svg'
+    } else if (f.size > MAX_POSTER_UPLOAD) {
+      it.status = 'fail'
+      it.err = `图片 ${fmtSize(f.size)} 超过 5MB，请先压缩或缩小尺寸再传`
+    }
+    posterQueue.value.push(it)
+    if (it.status === 'wait') enqueuePoster(it)
+  })
+  status(`已加入 ${list.length} 张海报`)
+}
+async function processPosterItem(it) {
+  it.err = ''
+  it.progress = 0
+  try {
+    it.status = 'upload'
+    /* 本地缩略图（dataURL）：上传前就能看见画面，也顺手证明这确实是一张能解码的图片 */
+    if (!it.thumb) {
+      try { it.thumb = await readAsDataURL(it.file) } catch (_) { /* 缩略图失败不阻断上传 */ }
+    }
+    const data = await readAsDataURL(it.file)
+    const path = await uploadFile(it.name, data, 'image')
+    it.status = 'done'
+    it.progress = 100
+    bindToPosters(it, path)
+  } catch (e) {
+    it.status = 'fail'
+    it.err = e.message || '上传失败，请重试'
+  }
+}
+function retryPosterItem(it) {
+  it.status = 'wait'
+  it.progress = 0
+  enqueuePoster(it)
+}
+function removePosterItem(it) {
+  const i = posterQueue.value.indexOf(it)
+  if (i >= 0) posterQueue.value.splice(i, 1)
+}
+function clearPosterDone() {
+  for (let i = posterQueue.value.length - 1; i >= 0; i--) {
+    if (posterQueue.value[i].status === 'done') posterQueue.value.splice(i, 1)
+  }
+}
+/* 上传成功 → 同步进海报列表（同路径覆盖，重复上传不会出现两条） */
+function bindToPosters(it, path) {
+  if (!form.posters) form.posters = []
+  const entry = {
+    src: path,
+    title: String(it.title || '').trim() || it.name.replace(/\.[^.]+$/, ''),
+    desc: String(it.desc || '').trim()
+  }
+  const idx = form.posters.findIndex((p) => p.src === path)
+  if (idx >= 0) form.posters[idx] = { ...form.posters[idx], ...entry }
+  else form.posters.push(entry)
+  it.path = path
+}
+/* 队列 → 列表：改队列里的标题/说明，立刻反映到上线内容 */
+function syncPoster(it) {
+  if (!it.path || !form.posters) return
+  const idx = form.posters.findIndex((p) => p.src === it.path)
+  if (idx < 0) return
+  form.posters[idx].title = String(it.title || '').trim()
+  form.posters[idx].desc = String(it.desc || '').trim()
+}
+/* 列表 → 队列：改列表里的标题/说明，同路径的队列项跟着走（防止下次上传把它覆盖回去） */
+function syncPosterBack(i) {
+  const p = (form.posters || [])[i]
+  if (!p) return
+  posterQueue.value.forEach((it) => {
+    if (it.path && it.path === p.src) {
+      it.title = p.title || ''
+      it.desc = p.desc || ''
+    }
+  })
+}
+function removePoster(i) {
+  form.posters.splice(i, 1)
+}
+function movePoster(i, dir) {
+  const j = i + dir
+  if (j < 0 || j >= form.posters.length) return
+  const [row] = form.posters.splice(i, 1)
+  form.posters.splice(j, 0, row)
+}
+function posterName(p) {
+  return String(p?.src || '').split('/').pop()
 }
 
 /* ============================================================
@@ -1645,6 +1794,110 @@ onMounted(load)
           </button>
         </section>
 
+        <section class="wk-sec">
+          <h3>⑮ 视觉海报 · 上传与编辑 <span class="sec-badge">图片轮播</span></h3>
+          <p class="tip">
+            把 Midjourney / SD / Flux 出的画面拖进来，填好标题与说明即可上线；
+            站点「视觉海报」板块会以轮播展示（箭头、指示点、左右滑动、键盘 ← → 都能翻）。
+            展示画框是 <b>3:4 竖版</b>、图片完整不裁切 —— <b>竖版海报直接传</b>即可；
+            比例与画框差得多时会用同图的虚化延伸垫住两侧留白。单张 ≤5MB，至少 2 张才形成轮播。
+          </p>
+
+          <!-- 图片拖拽区 -->
+          <div
+            class="dropzone"
+            :class="{ over: posterDragOver }"
+            @dragover.prevent="posterDragOver = true"
+            @dragleave.prevent="posterDragOver = false"
+            @drop.prevent="onPosterDrop">
+            <div class="dz-icon">▣</div>
+            <div class="dz-main">把海报图片拖到这里</div>
+            <div class="dz-sub">或 <button class="dz-btn" type="button" @click="pickPosterFiles">点击选择（可多选）</button></div>
+            <div class="dz-hint">
+              支持 png / jpg / jpeg / webp / gif / avif / svg（单个 ≤5MB，最多 {{ POSTER_MAX_ITEMS }} 张）
+            </div>
+          </div>
+
+          <!-- 上传队列（含图片预览 + 标题说明） -->
+          <div v-for="it in posterQueue" :key="it.id" class="up-item">
+            <div class="up-row">
+              <div class="up-thumb up-thumb-img">
+                <img v-if="it.thumb" :src="it.thumb" alt="" />
+                <span v-else>▣</span>
+              </div>
+              <div class="up-meta">
+                <div class="up-name" :title="it.name">{{ it.name }}</div>
+                <div class="up-size">原始 {{ fmtSize(it.size) }}</div>
+              </div>
+              <span class="up-status" :class="'st-' + it.status">{{ STATUS_TEXT[it.status] }}</span>
+              <button class="del" type="button" title="从队列移除" @click="removePosterItem(it)">✕</button>
+            </div>
+            <div v-if="it.status === 'upload'" class="up-bar">
+              <div class="up-bar-fill" :style="{ width: it.progress + '%' }"></div>
+            </div>
+            <div v-if="it.err" class="up-err">
+              ✕ {{ it.err }}
+              <button class="mini-btn retry" type="button" @click="retryPosterItem(it)">↻ 重新上传</button>
+            </div>
+            <template v-if="it.status === 'done'">
+              <div class="field">
+                <label>标题 <span class="cc">{{ cnt(it.title) }}/{{ POSTER_TITLE_MAX }}</span></label>
+                <input
+                  v-model="it.title"
+                  :maxlength="POSTER_TITLE_MAX"
+                  placeholder="例如：霓虹雨夜"
+                  @input="syncPoster(it)" />
+              </div>
+              <div class="field">
+                <label>说明（可选） <span class="cc">{{ cnt(it.desc) }}/{{ POSTER_DESC_MAX }}</span></label>
+                <input
+                  v-model="it.desc"
+                  :maxlength="POSTER_DESC_MAX"
+                  placeholder="一句话交代画面 / 用途 / 出处"
+                  @input="syncPoster(it)" />
+              </div>
+            </template>
+          </div>
+          <div v-if="posterQueue.length" class="field">
+            <label>队列操作</label>
+            <button class="mini-btn" type="button" @click="clearPosterDone">清空已完成</button>
+          </div>
+
+          <!-- 已加入的海报（顺序 = 轮播顺序） -->
+          <div class="sub-head">已加入：视觉海报 <span>{{ (form.posters || []).length }} 张</span></div>
+          <p class="tip">这里就是网站「视觉海报」板块的轮播内容，列表顺序即播放顺序；改完记得保存。</p>
+          <div v-for="(p, i) in form.posters || []" :key="'pt' + i" class="card pt-card">
+            <div class="card-head">
+              <span>{{ i + 1 }}. {{ p.title || '未命名海报' }}</span>
+              <span class="card-head-ops">
+                <button class="mini-btn" type="button" title="上移" @click="movePoster(i, -1)">↑</button>
+                <button class="mini-btn" type="button" title="下移" @click="movePoster(i, 1)">↓</button>
+                <button class="del" type="button" @click="removePoster(i)">✕</button>
+              </span>
+            </div>
+            <div class="pt-body">
+              <img v-if="p.src" class="pt-thumb" :src="p.src" alt="" loading="lazy" />
+              <div class="pt-edit">
+                <div class="field">
+                  <label>标题</label>
+                  <input v-model="p.title" :maxlength="POSTER_TITLE_MAX" @input="syncPosterBack(i)" />
+                </div>
+                <div class="field">
+                  <label>说明（可选）</label>
+                  <input v-model="p.desc" :maxlength="POSTER_DESC_MAX" @input="syncPosterBack(i)" />
+                </div>
+                <div class="up-size pt-src">{{ posterName(p) }}</div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!(form.posters || []).length" class="tk-empty">
+            还没有海报：拖入图片即可出现在「视觉海报」板块（2 张以上自动轮播）。
+          </div>
+          <button class="save-profile" type="button" :disabled="saving" @click="save()">
+            {{ saving ? '保存中…' : '💾 保存到网站' }}
+          </button>
+        </section>
+
       </aside>
 
       <!-- 右：实时预览 -->
@@ -2140,4 +2393,26 @@ onMounted(load)
 }
 .cc.over { color: #b4452f; font-weight: 700; }
 .tl-hint { font-style: normal; font-weight: 400; color: #a39c88; font-size: 11px; margin-left: 4px; }
+
+/* ---------- ⑮ 视觉海报 ---------- */
+.pt-card .cc { float: none; margin-left: 6px; font-weight: 400; color: #a39c88; font-size: 11px; }
+/* 队列缩略图：定尺寸 + 居中裁切，避免竖图把行高撑开 */
+.up-thumb-img {
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; color: #a39c88; font-size: 15px;
+}
+.up-thumb-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 已加入海报：左图右字段 */
+.pt-body { display: flex; gap: 12px; align-items: flex-start; }
+/* 缩略图取 3:4 竖版 —— 海报是竖版素材，横版缩略图会把画面裁得只剩中间一条 */
+.pt-thumb {
+  flex: 0 0 90px; width: 90px; height: 120px; object-fit: cover;
+  border-radius: 8px; border: 1px solid #ece6d6; background: #eee9da; display: block;
+}
+.pt-edit { flex: 1; min-width: 0; }
+.pt-edit .field { margin-bottom: 8px; }
+.pt-src { word-break: break-all; }
+@media (max-width: 720px) {
+  .pt-thumb { flex: 0 0 76px; width: 76px; height: 101px; }
+}
 </style>

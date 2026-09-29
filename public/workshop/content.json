@@ -64,14 +64,25 @@
     {
       "no": "03",
       "title": "ARCAÉ 溯颜",
-      "desc": "AI 品牌广告 · 护肤美学视觉短片",
+      "desc": "AI 品牌广告 · 香水美学视觉短片",
       "tags": [
         "AI 视频",
         "品牌广告",
         "2026"
       ],
       "cover": "assets/images/bili-ad-03.jpg",
-      "bilibili": "https://www.bilibili.com/video/BV1YxYK6xEr2?vd_source=98200b0f1a20c927f9663aa19dc9c556",
+      "bilibili": "【广告作业】https://www.bilibili.com/video/BV1Vqa769E6A?vd_source=98200b0f1a20c927f9663aa19dc9c556",
+      "local": ""
+    },
+    {
+      "no": "04",
+      "title": "为AIGC而生",
+      "desc": "AI创意广告 · 赛博霓虹风格高性能主机",
+      "tags": [
+        "AI视频广告"
+      ],
+      "cover": "assets/images/2.jpg",
+      "bilibili": "【为AIGC而生】https://www.bilibili.com/video/BV1tSa76yEPi?vd_source=98200b0f1a20c927f9663aa19dc9c556",
       "local": ""
     }
   ],

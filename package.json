@@ -6,7 +6,9 @@
   "description": "AIGC creator personal portfolio — pure frontend, bilingual (zh/en), 5 theme presets, Bilibili embeds, zero backend",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/asset-version.mjs && node scripts/spa-fallback.mjs",
+    "build:workshop": "vite build --mode workshop --outDir dist-workshop && node scripts/asset-version.mjs --target workshop && node scripts/spa-fallback.mjs --target workshop",
+    "build:all": "npm run build && npm run build:workshop",
     "preview": "vite preview",
     "check": "node scripts/check-content.mjs",
     "shots": "node scripts/screenshot.mjs",

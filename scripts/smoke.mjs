@@ -35,7 +35,7 @@ page.on('console', (m) => {
 
 const PRESETS = ['aurora', 'cyber', 'gold', 'paper', 'sunset']
 const CASES = [
-  { path: '/', expect: () => page.locator('.hero .title').count(), name: 'home hero' },
+  { path: '/home', expect: () => page.locator('.hero .title').count(), name: 'home hero' },
   { path: '/works', expect: () => page.locator('.cell').count(), min: 1, name: 'works grid' },
   { path: '/videos', expect: () => page.locator('.item .frame').count(), min: 1, name: 'videos frames' },
   { path: '/about', expect: () => page.locator('.timeline li').count(), min: 1, name: 'about timeline' }
@@ -78,9 +78,9 @@ for (const lang of ['zh', 'en']) {
 }
 
 /* 语言切换实际生效检查 */
-await gotoApp('/', { lang: 'zh' })
+await gotoApp('/home', { lang: 'zh' })
 const zhTitle = await page.locator('.hero .title').innerText().catch(() => '<missing>')
-await gotoApp('/', { lang: 'en' })
+await gotoApp('/home', { lang: 'en' })
 const enTitle = await page.locator('.hero .title').innerText().catch(() => '<missing>')
 results.push(`${zhTitle !== enTitle ? '✓' : '✗'} i18n hero title differs (zh="${String(zhTitle).slice(0, 18)}…" en="${String(enTitle).slice(0, 18)}…")`)
 if (zhTitle === enTitle) errors.push(`FAIL: i18n title identical (${zhTitle})`)
@@ -96,7 +96,7 @@ if (!lbOpen) errors.push('FAIL: lightbox did not open')
 /* ===== 交互路径测试（真实点击，非状态注入） ===== */
 
 /* 1) 主题下拉：打开 → 选"暗金质感" → attr 变化且菜单自动关闭 */
-await gotoApp('/', { lang: 'zh', preset: 'aurora' })
+await gotoApp('/home', { lang: 'zh', preset: 'aurora' })
 await page.click('[data-testid="preset-btn"]')
 const menuVisible = await page.locator('.theme-menu').count()
 await page.click('[data-testid="preset-option"]:has-text("暗金质感")')
@@ -177,7 +177,7 @@ if (!redirOk) errors.push(`FAIL: catchall path=${redirPath}`)
 
 /* 9) 移动视口：burger 打开 → 点导航项 → 自动关闭 */
 await page.setViewportSize({ width: 390, height: 844 })
-await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
+await page.goto(`${BASE}/home`, { waitUntil: 'domcontentloaded' })
 await page.waitForSelector('.burger', { timeout: 10000 })
 await page.click('.burger')
 const mobileOpen = await page.locator('.mobile').count()

@@ -4,6 +4,8 @@ node_modules/
 # ---------- 构建产物 ----------
 dist/
 dist-ssr/
+# 工坊版构建产物（npm run build:workshop）：可由源码随时重建，30MB 级，不进版本库
+dist-workshop/
 
 # ---------- 项目内的历史副本（冗余）----------
 # 这是早期版本的整份拷贝，自带独立的 node_modules，与根目录源码重复。

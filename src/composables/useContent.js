@@ -18,24 +18,77 @@ export const state = reactive({
   error: null
 })
 
-let started = false
+const CONTENT_URL = `${import.meta.env.BASE_URL}content/content.json`
+const CACHE_KEY = 'site-content-cache-v1'
+const MAX_ATTEMPTS = 3
+const FETCH_TIMEOUT = 6000
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/* 单次拉取：带缓存冲销 + 超时中断，避免网关挂起时永远停在 loading */
+async function fetchContent() {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+  try {
+    const res = await fetch(`${CONTENT_URL}?t=${Date.now()}`, {
+      cache: 'no-store',
+      signal: controller.signal
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+let inflight = null
 
 export async function load() {
-  if (started) return
-  started = true
-  try {
-    const res = await fetch(`${import.meta.env.BASE_URL}content/content.json`, { cache: 'no-cache' })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    applyContent(await res.json())
-    /* 内容工坊实时预览握手：iframe 内加载完成后向工坊"报到"，
-       工坊收到 wk:hello 会立即推送当前编辑内容（防 fetch 完成覆盖编辑态的竞态） */
-    if (import.meta.env.DEV && window.parent !== window) {
-      window.parent.postMessage({ type: 'wk:hello' }, '*')
+  if (inflight) return inflight
+  inflight = (async () => {
+    state.status = 'loading'
+    state.error = null
+    let lastError = null
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const json = await fetchContent()
+        applyContent(json)
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(json))
+        } catch (_) {
+          /* 隐私模式 / 配额不足：忽略缓存写入 */
+        }
+        /* 内容工坊实时预览握手：iframe 内加载完成后向工坊"报到"，
+           工坊收到 wk:hello 会立即推送当前编辑内容（防 fetch 完成覆盖编辑态的竞态） */
+        if (import.meta.env.DEV && window.parent !== window) {
+          window.parent.postMessage({ type: 'wk:hello' }, '*')
+        }
+        return
+      } catch (e) {
+        lastError = e
+        if (attempt < MAX_ATTEMPTS - 1) await sleep(500 * (attempt + 1))
+      }
     }
-  } catch (e) {
-    state.error = e
+
+    /* 断网 / 网关抖动：回退到上一次成功缓存，页面仍然可用 */
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+      if (cached) {
+        applyContent(JSON.parse(cached))
+        state.error = null
+        return
+      }
+    } catch (_) {
+      /* 缓存损坏则忽略 */
+    }
+
+    state.error = lastError
     state.status = 'error'
-  }
+  })().finally(() => {
+    inflight = null
+  })
+  return inflight
 }
 
 export function applyContent(json) {

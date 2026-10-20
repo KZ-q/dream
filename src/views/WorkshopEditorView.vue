@@ -1,16 +1,20 @@
 <script setup>
 /* ============================================================
- * 孔诸祺作品站 · 可视化修改工坊（仅 dev 模式可访问 /workshop/edit）
+ * 孔诸祺作品站 · 可视化修改工坊（/workshop/edit）
+ * 访问方式：本地 dev（npm run dev）/ 工坊版构建产物（npm run build:workshop）
  * 左：表单（文字 / 图片 / 视频外链 / 上传）　右：iframe 实时预览
  * 保存 → PUT /api/workshop/content　还原 → POST /api/workshop/restore
  * 实时预览通过 postMessage({type:'wk:content'}) 推送到作品站页面
+ * 静态部署（无 dev server）时自动降级：读取线上 content.json 只读预览，
+ * 保存/还原/上传给出明确提示（需本地 npm run dev）
  * ============================================================ */
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 /* GIF 编码器（纯前端：视频/连续图片 → 动图） */
 import { GIFEncoder, quantize, applyPalette } from 'gifenc'
 
 const BASE = import.meta.env.BASE_URL
-const previewSrc = `${BASE}workshop/index.html?nowelcome=1`
+/* ?v= 构建版本号：破浏览器对固定文件名 index.html 的缓存（同上，见 PortfolioSiteView.vue） */
+const previewSrc = `${BASE}workshop/index.html?v=${__BUILD_VERSION__}&nowelcome=1`
 const previewRef = ref(null)
 /* 轮播图字段：数组 ↔ 文本框（每行一个路径）互转 */
 const heroSlidesText = computed({
@@ -21,6 +25,8 @@ const fileInput = ref(null)
 const form = reactive(emptyContent())
 const msg = ref({ text: '', type: '' })
 const saving = ref(false)
+/* 纯静态部署（无 dev server）：保存/还原/上传不可用，编辑器降级为只读预览 */
+const staticMode = ref(false)
 let pendingSetter = null
 let msgTimer = null
 let postTimer = null
@@ -49,15 +55,40 @@ function status(text, isErr = false) {
 
 /* ---------- 载入当前内容 ---------- */
 async function load() {
+  /* 工坊版生产构建 = 纯静态部署（无 dev server）：跳过 API 试探直接读静态 content.json，避免 404 噪音 */
+  if (import.meta.env.VITE_WITH_WORKSHOP && !import.meta.env.DEV) {
+    staticMode.value = true
+    try {
+      const res = await fetch(`${BASE}workshop/content.json`)
+      if (!res.ok) throw new Error('读取失败')
+      Object.assign(form, await res.json())
+      fillProfileDraft()
+      status('静态部署模式：已载入线上内容（保存需本地 npm run dev）')
+    } catch (e) {
+      status('载入失败：' + e.message, true)
+    }
+    return
+  }
   try {
     const res = await fetch('/api/workshop/content')
     if (!res.ok) throw new Error('读取失败')
     const d = await res.json()
     Object.assign(form, d.content)
+    staticMode.value = false
     fillProfileDraft()
     status('已载入当前内容')
   } catch (e) {
-    status('载入失败：' + e.message, true)
+    /* 兜底：API 不可用时回退读取构建产物里的 content.json，编辑器转只读预览模式 */
+    try {
+      const res = await fetch(`${BASE}workshop/content.json`)
+      if (!res.ok) throw new Error('读取失败')
+      Object.assign(form, await res.json())
+      staticMode.value = true
+      fillProfileDraft()
+      status('静态部署模式：已载入线上内容（保存需本地 npm run dev）')
+    } catch (e2) {
+      status('载入失败：' + e2.message, true)
+    }
   }
 }
 
@@ -198,6 +229,10 @@ function onPreviewLoad() {
 
 /* ---------- 保存 / 还原 ---------- */
 async function save() {
+  if (staticMode.value) {
+    status('静态部署不可保存：请在本地运行 npm run dev 用工坊修改', true)
+    return false
+  }
   saving.value = true
   try {
     /* 清理空背景配置（只展开过卡片但没选类型的条目不写入文件） */
@@ -225,6 +260,10 @@ async function save() {
   }
 }
 async function restore() {
+  if (staticMode.value) {
+    status('静态部署不可还原：请在本地运行 npm run dev 用工坊修改', true)
+    return
+  }
   if (!confirm('确定还原为默认内容？当前未保存的修改会丢失。')) return
   try {
     const res = await fetch('/api/workshop/restore', { method: 'POST' })
@@ -241,7 +280,7 @@ function refreshPreview() {
   if (f) f.contentWindow.location.reload()
 }
 function openLive() {
-  window.open(`${BASE}workshop/index.html`, '_blank')
+  window.open(`${BASE}workshop/index.html?v=${__BUILD_VERSION__}`, '_blank')
 }
 
 /* ---------- 图片 / 视频上传 ---------- */
@@ -295,6 +334,10 @@ async function onFilePicked(e) {
     const dur = await videoDuration(f)
     if (dur && dur > 35) warn = `（提示：时长 ${Math.round(dur)}s，建议 10–30 秒）`
     if (f.size > 10 * 1024 * 1024) warn += '（提示：超过 10MB，访客加载会偏慢）'
+  }
+  if (staticMode.value) {
+    status('静态部署不可上传：请在本地运行 npm run dev 用工坊修改', true)
+    return
   }
   status('上传中…')
   try {
@@ -602,6 +645,7 @@ async function processItem(it) {
   }
 }
 async function uploadFile(name, dataUrl, kind) {
+  if (staticMode.value) throw new Error('静态部署不可上传：请在本地运行 npm run dev 用工坊修改')
   const res = await fetch('/api/workshop/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1207,6 +1251,12 @@ onMounted(load)
       </div>
     </header>
 
+    <!-- 静态部署提示条（无 dev server 时出现：只读预览模式） -->
+    <div v-if="staticMode" class="wk-static-note">
+      ⓘ 当前为静态部署：左侧改动可实时预览，但「保存 / 还原 / 上传」需在本地开发环境运行
+      <code>npm run dev</code> 后，用工坊（<code>/workshop/edit</code>）完成。
+    </div>
+
     <div class="wk-body">
       <!-- 左：表单 -->
       <aside class="wk-panel">
@@ -1263,7 +1313,7 @@ onMounted(load)
           <div class="field">
             <label>背景图</label>
             <div class="row">
-              <input v-model="form.story.bg" placeholder="assets/images/cover-waimai.jpg" />
+              <input v-model="form.story.bg" placeholder="assets/images/cover-dongri.jpg" />
               <button class="up" @click="pickFile('image', (p) => (form.story.bg = p))">上传</button>
             </div>
           </div>
@@ -1308,13 +1358,13 @@ onMounted(load)
 
         <section class="wk-sec">
           <h3>⑥ 最新影片 Movie</h3>
-          <div class="field"><label>标题</label><input v-model="form.movie.title" placeholder="外卖侠" /></div>
+          <div class="field"><label>标题</label><input v-model="form.movie.title" placeholder="作品标题" /></div>
           <div class="field"><label>简介</label><textarea v-model="form.movie.desc" rows="2"></textarea></div>
           <div class="field"><label>B站链接 / BV号</label><input v-model="form.movie.bilibili" placeholder="https://www.bilibili.com/video/BV1xx…" /></div>
           <div class="field">
             <label>海报图</label>
             <div class="row">
-              <input v-model="form.movie.poster" placeholder="assets/images/cover-waimai.jpg" />
+              <input v-model="form.movie.poster" placeholder="assets/images/cover-dongri.jpg" />
               <button class="up" @click="pickFile('image', (p) => (form.movie.poster = p))">上传</button>
             </div>
           </div>
@@ -1912,14 +1962,31 @@ onMounted(load)
 </template>
 
 <style scoped>
+/* 静态部署提示条（只读预览模式） */
+.wk-static-note {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  background: #FDF3E3;
+  border-bottom: 1px solid #F0D9B5;
+  color: #8A5A18;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.wk-static-note code {
+  background: rgba(36, 71, 112, 0.08);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: inherit;
+}
 .wk {
   position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: #f3efe6;
+  background: #F7F8FA;
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-  color: #2c2a26;
+  color: #202935;
 }
 /* 工具条 */
 .wk-bar {
@@ -1929,8 +1996,8 @@ onMounted(load)
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: #2f3b2c;
-  color: #f3efe6;
+  background: #244770;
+  color: #FFFFFF;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
   z-index: 5;
 }
@@ -1976,7 +2043,7 @@ onMounted(load)
   font-size: 13px;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.16);
-  color: #f3efe6;
+  color: #FFFFFF;
   transition: background 0.15s;
   white-space: nowrap;
 }
@@ -1984,8 +2051,8 @@ onMounted(load)
   background: rgba(255, 255, 255, 0.28);
 }
 .wk-btn.primary {
-  background: #b8903c;
-  color: #2c2410;
+  background: linear-gradient(180deg, #E3A05E, #D48C48);
+  color: #1E2A3A;
   font-weight: 700;
 }
 .wk-btn.primary:disabled {
@@ -2007,13 +2074,13 @@ onMounted(load)
   flex: 0 0 400px;
   overflow-y: auto;
   padding: 16px;
-  background: #faf7ef;
-  border-right: 1px solid #e2dccb;
+  background: #FFFFFF;
+  border-right: 1px solid #E2E8F0;
 }
 .wk-preview {
   flex: 1;
   min-width: 0;
-  background: #1a1a18;
+  background: #EAF0F7;
 }
 .wk-preview iframe {
   width: 100%;
@@ -2024,7 +2091,7 @@ onMounted(load)
 /* 分区 */
 .wk-sec {
   background: #fff;
-  border: 1px solid #ece6d6;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 14px;
@@ -2032,11 +2099,11 @@ onMounted(load)
 .wk-sec h3 {
   margin: 0 0 10px;
   font-size: 14px;
-  color: #4c7a53;
+  color: #244770;
 }
 .tip {
   font-size: 12px;
-  color: #8a8472;
+  color: #718096;
   margin: 0 0 10px;
 }
 .field {
@@ -2053,7 +2120,7 @@ onMounted(load)
 .field label {
   display: block;
   font-size: 12px;
-  color: #6b6456;
+  color: #4A5568;
   margin-bottom: 4px;
 }
 .field input,
@@ -2061,20 +2128,20 @@ onMounted(load)
 .field select {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #ddd6c4;
+  border: 1px solid #E2E8F0;
   border-radius: 8px;
   padding: 7px 9px;
   font-size: 13px;
   font-family: inherit;
-  background: #fcfbf7;
-  color: #2c2a26;
+  background: #F7F8FA;
+  color: #202935;
   resize: vertical;
 }
 .field input:focus,
 .field textarea:focus,
 .field select:focus {
   outline: none;
-  border-color: #b8903c;
+  border-color: #D48C48;
   background: #fff;
 }
 .row {
@@ -2092,19 +2159,19 @@ onMounted(load)
   padding: 0 12px;
   font-size: 12px;
   cursor: pointer;
-  background: #4c7a53;
+  background: #244770;
   color: #fff;
 }
 .up:hover {
-  background: #3d6344;
+  background: #1B3A5C;
 }
 /* 卡片（数组项） */
 .card {
-  border: 1px dashed #d8d0bc;
+  border: 1px dashed #CBD5E0;
   border-radius: 10px;
   padding: 10px;
   margin-bottom: 10px;
-  background: #fcfbf7;
+  background: #F7F8FA;
 }
 .card-head {
   display: flex;
@@ -2112,12 +2179,12 @@ onMounted(load)
   align-items: center;
   font-size: 12px;
   font-weight: 700;
-  color: #6b6456;
+  color: #4A5568;
   margin-bottom: 8px;
 }
 .del {
   border: 0;
-  background: #f1e3e0;
+  background: #FDECEA;
   color: #b4452f;
   border-radius: 6px;
   width: 22px;
@@ -2127,9 +2194,9 @@ onMounted(load)
 }
 .add {
   width: 100%;
-  border: 1px dashed #b8903c;
+  border: 1px dashed #D48C48;
   background: #fff;
-  color: #9a7320;
+  color: #B7791F;
   border-radius: 8px;
   padding: 8px;
   font-size: 13px;
@@ -2140,10 +2207,10 @@ onMounted(load)
 }
 /* ---------- 区块背景面板（与工坊米纸风一致） ---------- */
 .bg-card {
-  border: 1px solid #ece6d6;
+  border: 1px solid #E2E8F0;
   border-radius: 10px;
   margin-bottom: 8px;
-  background: #fcfbf7;
+  background: #F7F8FA;
   overflow: hidden;
 }
 .bg-head {
@@ -2156,38 +2223,38 @@ onMounted(load)
   padding: 10px 12px;
   cursor: pointer;
   font-size: 13px;
-  color: #2c2a26;
+  color: #202935;
   text-align: left;
 }
 .bg-head:hover {
-  background: #f6f1e3;
+  background: #F0F4F8;
 }
 .bg-name {
   flex: 1;
   min-width: 0;
   font-weight: 700;
-  color: #6b6456;
+  color: #4A5568;
 }
 .bg-state {
   flex: 0 0 auto;
   font-size: 11px;
   padding: 2px 10px;
   border-radius: 999px;
-  background: #eee9da;
-  color: #8a8472;
+  background: #EDF2F7;
+  color: #718096;
 }
 .bg-state.on {
-  background: #4c7a53;
+  background: #244770;
   color: #fff;
 }
 .bg-arrow {
   flex: 0 0 auto;
-  color: #b8903c;
+  color: #D48C48;
   font-size: 12px;
 }
 .bg-body {
   padding: 4px 12px 12px;
-  border-top: 1px dashed #ece6d6;
+  border-top: 1px dashed #E2E8F0;
 }
 .bg-body .tip {
   margin: 8px 0 4px;
@@ -2196,20 +2263,20 @@ onMounted(load)
   width: 100%;
   height: 34px;
   padding: 2px;
-  border: 1px solid #ddd6c4;
+  border: 1px solid #E2E8F0;
   border-radius: 8px;
-  background: #fcfbf7;
+  background: #F7F8FA;
   cursor: pointer;
 }
 .bg-body input[type='range'] {
   width: 100%;
-  accent-color: #b8903c;
+  accent-color: #D48C48;
   cursor: pointer;
 }
 .bg-remove {
   width: 100%;
-  border: 1px solid #e4c9c2;
-  background: #f9efec;
+  border: 1px solid #F5C6BC;
+  background: #FDECEA;
   color: #b4452f;
   border-radius: 8px;
   padding: 7px;
@@ -2218,12 +2285,12 @@ onMounted(load)
   margin-top: 4px;
 }
 .bg-remove:hover {
-  background: #f3e3de;
+  background: #FADBD8;
 }
 /* ---------- ⑩ 个人简介独立编辑板块（预览卡 / 字数统计 / 保存取消） ---------- */
 .sec-badge {
   font-size: 10px;
-  background: #4c7a53;
+  background: #244770;
   color: #fff;
   border-radius: 999px;
   padding: 2px 9px;
@@ -2234,36 +2301,36 @@ onMounted(load)
 .char-count {
   text-align: right;
   font-size: 11px;
-  color: #8a8472;
+  color: #718096;
   margin-top: 4px;
 }
-.char-count.warn { color: #b8903c; font-weight: 700; }
+.char-count.warn { color: #D48C48; font-weight: 700; }
 .char-count.over { color: #b4452f; font-weight: 700; }
 .pp-label {
   display: block;
   font-size: 12px;
-  color: #6b6456;
+  color: #4A5568;
   margin-bottom: 4px;
 }
 .profile-preview {
-  border: 1px dashed #d8d0bc;
+  border: 1px dashed #CBD5E0;
   border-radius: 10px;
-  background: #f6f1e3;
+  background: #F0F4F8;
   padding: 12px 14px;
   margin-bottom: 12px;
 }
 .pp-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .pp-mono {
   width: 34px; height: 34px; flex: 0 0 34px; border-radius: 9px;
-  background: #2f3b2c; color: #f3efe6;
+  background: #244770; color: #FFFFFF;
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 16px;
 }
-.pp-name { font-weight: 700; font-size: 14px; color: #2c2a26; }
-.pp-role { font-size: 11px; color: #4c7a53; margin-top: 1px; }
-.pp-body p { font-size: 12.5px; line-height: 1.8; color: #4a463c; margin: 0 0 8px; }
+.pp-name { font-weight: 700; font-size: 14px; color: #202935; }
+.pp-role { font-size: 11px; color: #244770; margin-top: 1px; }
+.pp-body p { font-size: 12.5px; line-height: 1.8; color: #4A5568; margin: 0 0 8px; }
 .pp-body p:last-child { margin-bottom: 0; }
-.pp-empty { color: #a39c88; font-style: italic; }
+.pp-empty { color: #A0AEC0; font-style: italic; }
 .save-profile {
   flex: 1;
   border: 0;
@@ -2272,134 +2339,134 @@ onMounted(load)
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  background: #4c7a53;
+  background: #244770;
   color: #fff;
 }
-.save-profile:hover { background: #3d6344; }
+.save-profile:hover { background: #1B3A5C; }
 .save-profile:disabled { opacity: 0.6; cursor: default; }
 .cancel-profile {
   flex: 0 0 auto;
-  border: 1px solid #ddd6c4;
+  border: 1px solid #E2E8F0;
   background: #fff;
-  color: #6b6456;
+  color: #4A5568;
   border-radius: 8px;
   padding: 9px 14px;
   font-size: 13px;
   cursor: pointer;
 }
-.cancel-profile:hover { background: #f6f1e3; }
+.cancel-profile:hover { background: #F0F4F8; }
 .cancel-profile:disabled { opacity: 0.6; cursor: default; }
 
 /* ---------- ⑪ 上传与压缩模块 ---------- */
 .dropzone {
-  border: 2px dashed #d8d0bc;
+  border: 2px dashed #CBD5E0;
   border-radius: 12px;
-  background: #fcfbf7;
+  background: #F7F8FA;
   padding: 20px 14px;
   text-align: center;
   margin-bottom: 12px;
   transition: border-color 0.25s, background 0.25s, transform 0.25s;
 }
-.dropzone.over { border-color: #4c7a53; background: #f2f7f2; transform: scale(1.01); }
+.dropzone.over { border-color: #244770; background: #EAF0F7; transform: scale(1.01); }
 .dropzone.slim { padding: 12px; margin-bottom: 10px; }
 .dropzone.slim .dz-main { margin-top: 0; font-size: 13px; }
-.dz-icon { font-size: 22px; color: #4c7a53; line-height: 1; }
-.dz-main { font-size: 14px; font-weight: 700; color: #4a463c; margin-top: 8px; }
-.dz-sub { font-size: 12px; color: #8a8472; margin-top: 4px; }
+.dz-icon { font-size: 22px; color: #244770; line-height: 1; }
+.dz-main { font-size: 14px; font-weight: 700; color: #4A5568; margin-top: 8px; }
+.dz-sub { font-size: 12px; color: #718096; margin-top: 4px; }
 .dz-btn {
-  border: 0; background: #4c7a53; color: #fff; border-radius: 6px;
+  border: 0; background: #244770; color: #fff; border-radius: 6px;
   padding: 3px 10px; font-size: 12px; cursor: pointer;
 }
-.dz-btn:hover { background: #3d6344; }
-.dz-hint { font-size: 11px; color: #a39c88; margin-top: 8px; line-height: 1.6; }
+.dz-btn:hover { background: #1B3A5C; }
+.dz-hint { font-size: 11px; color: #A0AEC0; margin-top: 8px; line-height: 1.6; }
 
-.up-item { border: 1px solid #ece6d6; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fcfbf7; }
+.up-item { border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #F7F8FA; }
 .up-row { display: flex; align-items: center; gap: 10px; }
-.up-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #eee9da; flex: 0 0 44px; }
-.up-thumb-empty { display: flex; align-items: center; justify-content: center; color: #a39c88; font-size: 16px; }
+.up-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #EDF2F7; flex: 0 0 44px; }
+.up-thumb-empty { display: flex; align-items: center; justify-content: center; color: #A0AEC0; font-size: 16px; }
 .up-meta { flex: 1; min-width: 0; }
-.up-name { font-size: 13px; color: #2c2a26; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.up-size { font-size: 11px; color: #8a8472; margin-top: 2px; }
+.up-name { font-size: 13px; color: #202935; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-size { font-size: 11px; color: #718096; margin-top: 2px; }
 .up-status {
   flex: 0 0 auto; font-size: 11px; padding: 3px 10px; border-radius: 999px;
-  background: #eee9da; color: #8a8472; white-space: nowrap;
+  background: #EDF2F7; color: #718096; white-space: nowrap;
 }
-.up-status.st-compress, .up-status.st-upload { background: #fdf0d8; color: #9a7320; }
-.up-status.st-done { background: #4c7a53; color: #fff; }
-.up-status.st-fail { background: #f6e2de; color: #b4452f; }
-.up-bar { height: 6px; border-radius: 999px; background: #eee9da; overflow: hidden; margin: 8px 0 0; }
-.up-bar-fill { height: 100%; background: linear-gradient(90deg, #6f9a76, #4c7a53); transition: width 0.2s linear; }
-.up-note { font-size: 11.5px; color: #4c7a53; margin-top: 6px; }
+.up-status.st-compress, .up-status.st-upload { background: #FDF3E3; color: #B7791F; }
+.up-status.st-done { background: #244770; color: #fff; }
+.up-status.st-fail { background: #FDECEA; color: #b4452f; }
+.up-bar { height: 6px; border-radius: 999px; background: #EDF2F7; overflow: hidden; margin: 8px 0 0; }
+.up-bar-fill { height: 100%; background: linear-gradient(90deg, #426B9E, #244770); transition: width 0.2s linear; }
+.up-note { font-size: 11.5px; color: #244770; margin-top: 6px; }
 .up-err {
   font-size: 12px; color: #b4452f; margin-top: 6px;
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
 .up-fields { margin-top: 8px; }
 .mini-btn {
-  border: 1px solid #ddd6c4; background: #fff; color: #6b6456;
+  border: 1px solid #E2E8F0; background: #fff; color: #4A5568;
   border-radius: 7px; padding: 4px 9px; font-size: 11.5px; cursor: pointer;
 }
-.mini-btn:hover { background: #f6f1e3; }
-.mini-btn.retry { border-color: #e4c9c2; color: #b4452f; background: #f9efec; }
+.mini-btn:hover { background: #F0F4F8; }
+.mini-btn.retry { border-color: #F5C6BC; color: #b4452f; background: #FDECEA; }
 .sub-head {
-  font-size: 12px; font-weight: 700; color: #4c7a53;
+  font-size: 12px; font-weight: 700; color: #244770;
   margin: 14px 0 4px; display: flex; justify-content: space-between; align-items: baseline;
 }
-.sub-head span { font-weight: 400; color: #8a8472; font-size: 11px; }
+.sub-head span { font-weight: 400; color: #718096; font-size: 11px; }
 .card-head-ops { display: flex; align-items: center; gap: 5px; }
 .mo-preview { margin-bottom: 8px; }
 .mo-preview img, .mo-preview video {
   width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;
-  background: #eee9da; display: block;
+  background: #EDF2F7; display: block;
 }
-.mo-empty { font-size: 11px; color: #a39c88; }
+.mo-empty { font-size: 11px; color: #A0AEC0; }
 
 /* ---------- ⑫ 动图制作 ---------- */
 .seg { display: flex; gap: 6px; }
 .seg button {
-  flex: 1; border: 1px solid #ddd6c4; background: #fff; color: #6b6456;
+  flex: 1; border: 1px solid #E2E8F0; background: #fff; color: #4A5568;
   border-radius: 8px; padding: 7px; font-size: 12.5px; cursor: pointer;
 }
-.seg button.on { background: #2f3b2c; border-color: #2f3b2c; color: #f3efe6; font-weight: 700; }
-.file-name { font-size: 11.5px; color: #8a8472; align-self: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg button.on { background: #244770; border-color: #244770; color: #FFFFFF; font-weight: 700; }
+.file-name { font-size: 11.5px; color: #718096; align-self: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gif-video { width: 100%; border-radius: 10px; background: #000; margin-bottom: 10px; display: block; }
 .strip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-.strip img { width: 46px; height: 46px; object-fit: cover; border-radius: 7px; border: 1px solid #ece6d6; }
-.strip-more { display: flex; align-items: center; font-size: 11px; color: #8a8472; }
+.strip img { width: 46px; height: 46px; object-fit: cover; border-radius: 7px; border: 1px solid #E2E8F0; }
+.strip-more { display: flex; align-items: center; font-size: 11px; color: #718096; }
 .gif-result { text-align: center; margin-bottom: 10px; }
 .gif-result img {
   max-width: 100%; max-height: 240px; border-radius: 10px;
-  border: 1px solid #ece6d6; background:
-    linear-gradient(45deg, #f0ece0 25%, transparent 25%, transparent 75%, #f0ece0 75%) 0 0 / 16px 16px,
-    linear-gradient(45deg, #f0ece0 25%, transparent 25%, transparent 75%, #f0ece0 75%) 8px 8px / 16px 16px,
+  border: 1px solid #E2E8F0; background:
+    linear-gradient(45deg, #EDF2F7 25%, transparent 25%, transparent 75%, #EDF2F7 75%) 0 0 / 16px 16px,
+    linear-gradient(45deg, #EDF2F7 25%, transparent 25%, transparent 75%, #EDF2F7 75%) 8px 8px / 16px 16px,
     #fff;
 }
-.gif-result-meta { font-size: 11.5px; color: #4c7a53; margin-top: 6px; }
+.gif-result-meta { font-size: 11.5px; color: #244770; margin-top: 6px; }
 
 /* ---------- ⑬ 经历速览 ---------- */
 .req { color: #b4452f; font-weight: 700; }
-.cc { float: right; font-weight: 400; color: #a39c88; font-size: 11px; }
+.cc { float: right; font-weight: 400; color: #A0AEC0; font-size: 11px; }
 
 /* ---------- ⑭ AI 音乐创作 ---------- */
 .tk-audio { width: 100%; height: 34px; margin-bottom: 6px; display: block; }
 .tk-src { margin-bottom: 8px; word-break: break-all; }
 .tk-cover {
   display: block; width: 84px; height: 84px; object-fit: cover;
-  border-radius: 8px; border: 1px solid #ece6d6; margin-top: 8px;
+  border-radius: 8px; border: 1px solid #E2E8F0; margin-top: 8px;
 }
 .tk-empty {
-  border: 1px dashed #ddd6c4; border-radius: 10px; padding: 16px;
-  text-align: center; font-size: 12px; color: #8a8472; margin-bottom: 12px;
+  border: 1px dashed #E2E8F0; border-radius: 10px; padding: 16px;
+  text-align: center; font-size: 12px; color: #718096; margin-bottom: 12px;
 }
 .cc.over { color: #b4452f; font-weight: 700; }
-.tl-hint { font-style: normal; font-weight: 400; color: #a39c88; font-size: 11px; margin-left: 4px; }
+.tl-hint { font-style: normal; font-weight: 400; color: #A0AEC0; font-size: 11px; margin-left: 4px; }
 
 /* ---------- ⑮ 视觉海报 ---------- */
-.pt-card .cc { float: none; margin-left: 6px; font-weight: 400; color: #a39c88; font-size: 11px; }
+.pt-card .cc { float: none; margin-left: 6px; font-weight: 400; color: #A0AEC0; font-size: 11px; }
 /* 队列缩略图：定尺寸 + 居中裁切，避免竖图把行高撑开 */
 .up-thumb-img {
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden; color: #a39c88; font-size: 15px;
+  overflow: hidden; color: #A0AEC0; font-size: 15px;
 }
 .up-thumb-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* 已加入海报：左图右字段 */
@@ -2407,7 +2474,7 @@ onMounted(load)
 /* 缩略图取 3:4 竖版 —— 海报是竖版素材，横版缩略图会把画面裁得只剩中间一条 */
 .pt-thumb {
   flex: 0 0 90px; width: 90px; height: 120px; object-fit: cover;
-  border-radius: 8px; border: 1px solid #ece6d6; background: #eee9da; display: block;
+  border-radius: 8px; border: 1px solid #E2E8F0; background: #EDF2F7; display: block;
 }
 .pt-edit { flex: 1; min-width: 0; }
 .pt-edit .field { margin-bottom: 8px; }

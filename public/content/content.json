@@ -136,8 +136,8 @@
       "url": "https://beian.miit.gov.cn/"
     },
     "note": {
-      "zh": "Built with Vue 3 · Deployed on Vercel",
-      "en": "Built with Vue 3 · Deployed on Vercel"
+      "zh": "Built with Vue 3 · 部署于 WorkBuddy",
+      "en": "Built with Vue 3 · Deployed on WorkBuddy"
     }
   },
   "home": {

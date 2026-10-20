@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="孔诸祺 · AIGC 影像创作者个人站 — AI 短视频 / 视觉叙事 / 作品集" />
-  <title>孔诸祺 · AIGC 影像创作</title>
+  <meta name="description" content="工作室 · AIGC 影像创作者个人站 — AI 短视频 / 视觉叙事 / 作品集" />
+  <title>工作室 · AIGC 影像创作</title>
 
   <!-- 站点图标：此前缺失，浏览器会退回请求 /favicon.ico 并 404（标签页无图标） -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
@@ -15,15 +15,15 @@
        无法用脚本按 location.origin 动态拼 —— 故此处写死主域名。
        若日后更换主域名，需同步修改下面 3 处 URL。 -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="孔诸祺 · AIGC 影像创作" />
-  <meta property="og:title" content="孔诸祺 · AIGC 影像创作" />
+  <meta property="og:site_name" content="工作室 · AIGC 影像创作" />
+  <meta property="og:title" content="工作室 · AIGC 影像创作" />
   <meta property="og:description" content="AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。以 AI 为笔，光影为墨。" />
-  <meta property="og:image" content="https://dream-iwvc7c9b.zh-cn.edgeone.cool/workshop/assets/images/og-cover.jpg" />
-  <meta property="og:url" content="https://dream-iwvc7c9b.zh-cn.edgeone.cool/" />
+  <meta property="og:image" content="https://kongzhuqi-studio.app.workbuddy.host/workshop/assets/images/og-cover.jpg" />
+  <meta property="og:url" content="https://kongzhuqi-studio.app.workbuddy.host/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="孔诸祺 · AIGC 影像创作" />
+  <meta name="twitter:title" content="工作室 · AIGC 影像创作" />
   <meta name="twitter:description" content="AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。" />
-  <meta name="twitter:image" content="https://dream-iwvc7c9b.zh-cn.edgeone.cool/workshop/assets/images/og-cover.jpg" />
+  <meta name="twitter:image" content="https://kongzhuqi-studio.app.workbuddy.host/workshop/assets/images/og-cover.jpg" />
   <meta name="theme-color" content="#0b0c0e" />
 
   <link rel="preconnect" href="https://player.bilibili.com" crossorigin />
@@ -32,25 +32,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <!-- 运动语言 v2：必须在 style.css 之后（同权重后定义者胜），统一时长/曲线/幅度 -->
+  <link rel="stylesheet" href="css/motion.css" />
+  <link
+    rel="preload"
+    as="image"
+    href="assets/images/hero-character-760.webp"
+    imagesrcset="assets/images/hero-character-480.webp 480w, assets/images/hero-character-760.webp 760w, assets/images/hero-character-1000.webp 1000w"
+    imagesizes="(max-width: 820px) 58vw, 44vw"
+    type="image/webp"
+  />
 </head>
 <body>
 
-  <!-- ============ 启动 / 标题画面（Splash Screen） ============ -->
-  <div class="splash" id="splash">
-    <div class="splash-bg"></div>
-    <div class="splash-content">
-      <div class="splash-logo">
-        <span class="logo-dot"></span>
-        孔诸祺<span>AIGC FILM</span>
-      </div>
-      <h1 class="splash-title">以 AI 为笔<em>光影为墨</em></h1>
-      <p class="splash-subtitle">AIGC VISUAL STORYTELLING · 2026</p>
-      <button class="splash-enter" id="splashEnter">ENTER · 进入</button>
-    </div>
-    <div class="splash-settings" id="splashSettings" title="设置">⚙</div>
-    <div class="splash-skip" id="splashSkip">点击任意处跳过 ▸</div>
-    <div class="splash-progress"><div class="splash-progress-bar" id="splashBar"></div></div>
-  </div>
 
   <!-- 顶部滚动进度条 -->
   <div class="scroll-progress" id="progress"></div>
@@ -67,7 +61,7 @@
         </button>
         <a href="#home" class="logo card-nav-logo">
           <span class="logo-dot"></span>
-          孔诸祺<span class="logo-sub">AIGC FILM</span>
+          工作室<span class="logo-sub">AIGC FILM</span>
         </a>
         <!-- 右侧按钮组：工坊入口（左）+ 合作洽谈（右） -->
         <div class="card-nav-actions">
@@ -106,20 +100,61 @@
 
   <!-- 主内容包裹层：footer 全屏揭示时，此层整体向上滑开（实底 + 底部 100vh 留白） -->
   <main id="pageContent">
-  <!-- ============ 1. 主视觉区 ============ -->
-  <section class="hero" id="home">
-    <div class="hero-bg" id="heroSlides"><!-- 由 JS 根据 hero.slides 生成轮播层（Carousel） --></div>
-    <div class="hero-overlay"></div>
-    <div class="hero-content reveal">
-      <span class="hero-badge" data-bind="hero.badge">OPEN FOR COMMISSIONS</span>
-      <h1 class="hero-title"><span data-bind="hero.title1">以 AI 为笔</span><span class="grad-text" data-bind="hero.title2">光影为墨</span></h1>
-      <p class="hero-subtitle" data-bind="hero.subtitle">你好，我是孔诸祺。一位 AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。<br />在这里，记录我与模型共同完成的每一次冒险。</p>
-      <div class="hero-cta">
-        <a href="#works" class="btn btn-primary">查看作品</a>
-        <a href="#about" class="btn btn-ghost">了解我</a>
+  <!-- ============ 1. 主视觉区：可交互浏览器窗口 Hero ============ -->
+  <section class="hero hero--window" id="home">
+    <div class="hero-window-wrap" id="heroWindowWrap">
+      <div class="hero-window" id="heroWindow">
+        <div class="hw-chrome" aria-hidden="true">
+          <span class="hw-dots"><i></i><i></i><i></i></span>
+          <span class="hw-nav"><span>‹</span><span>›</span></span>
+          <span class="hw-address">kongzhuqi.studio</span>
+          <span class="hw-live"><i></i>LIVE</span>
+        </div>
+
+        <div class="hw-screen">
+          <div class="hw-glow" aria-hidden="true"></div>
+          <div class="hw-grid" aria-hidden="true"></div>
+
+          <div class="hw-copy">
+            <span class="hero-badge hw-seq" style="--m-delay:0ms" data-bind="hero.badge">OPEN FOR COMMISSIONS</span>
+            <h1 class="hw-title hw-seq" style="--m-delay:70ms"><span data-bind="hero.title1">以 AI 为笔</span><span class="grad-text" data-bind="hero.title2">光影为墨</span></h1>
+            <p class="hw-sub hw-seq" style="--m-delay:150ms" data-bind="hero.subtitle">你好，我是孔诸祺。一位 AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。<br />在这里，记录我与模型共同完成的每一次冒险。</p>
+            <div class="hw-cta hw-seq" style="--m-delay:220ms">
+              <a href="#works" class="btn btn-primary">查看作品</a>
+              <a href="#about" class="btn btn-ghost">了解我</a>
+            </div>
+          </div>
+
+          <div class="hw-skeleton hw-seq" style="--m-delay:290ms" aria-hidden="true">
+            <div class="hw-bar"><i></i></div>
+            <div class="hw-card hw-card--sm">
+              <span class="hw-card-icon"></span>
+              <span class="hw-lines"><i></i><i></i></span>
+            </div>
+            <div class="hw-card hw-card--lg">
+              <span class="hw-lines"><i></i><i></i><i></i></span>
+              <span class="hw-ring"></span>
+            </div>
+            <div class="hw-faint"><i></i><i></i></div>
+          </div>
+
+          <div class="hw-shine" aria-hidden="true"></div>
+        </div>
+
+        <div class="hw-character hw-fade" style="--m-delay:110ms">
+          <div class="hw-char-parallax">
+            <picture>
+              <source type="image/webp" srcset="assets/images/hero-character-480.webp 480w, assets/images/hero-character-760.webp 760w, assets/images/hero-character-1000.webp 1000w" sizes="(max-width: 820px) 58vw, 44vw" />
+              <img src="assets/images/hero-character-480.png" width="696" height="770" alt="孔诸祺的 3D 角色形象：白色与黄色拼色夹克，单手托腮，另一只手转动一枚魔方" />
+            </picture>
+          </div>
+        </div>
+
+        <div class="hw-bezel" aria-hidden="true"></div>
       </div>
     </div>
-    <div class="hero-scroll">▾</div>
+
+    <div class="hero-scroll"><span>SCROLL</span><i>▾</i></div>
   </section>
 
   <!-- ============ 2. TOPICS 手记 ============ -->
@@ -150,7 +185,7 @@
 
   <!-- ============ 4. STORY 引言带 ============ -->
   <section class="quote-band" id="storyBand">
-    <div class="quote-bg" id="storyBg" data-speed="0.25" style="background-image:url('assets/images/cover-waimai.jpg')"></div>
+    <div class="quote-bg" id="storyBg" data-speed="0.25"></div>
     <div class="quote-inner reveal">
       <q data-bind="story.quote"></q>
       <span class="quote-by" data-bind="story.by">— 孔诸祺 · 创作手记</span>
@@ -212,17 +247,15 @@
         <div class="poster-head reveal">
           <span class="motion-tag">KEY VISUALS</span>
           <h3 class="motion-title">视觉海报</h3>
-          <p class="motion-desc">Midjourney / SD / Flux 生成的电影级画面 —— 点箭头或滑动浏览</p>
+          <p class="motion-desc">Midjourney / SD / Flux 生成的电影级画面 —— 拖动或点击卡片浏览</p>
         </div>
-        <div class="poster-carousel reveal" id="posterCarousel" tabindex="0"
+        <div class="poster-carousel reveal" id="posterCarousel"
           role="region" aria-roledescription="carousel" aria-label="视觉海报轮播">
-          <div class="poster-viewport">
-            <div class="poster-track" id="posterTrack"><!-- 由 JS 渲染 --></div>
-            <!-- 箭头放进画框内：定位基准＝画框（而非整个轮播），底部指示点有无都不影响居中 -->
-            <button class="poster-nav prev" id="posterPrev" type="button" aria-label="上一张">‹</button>
-            <button class="poster-nav next" id="posterNext" type="button" aria-label="下一张">›</button>
-          </div>
-          <div class="poster-dots" id="posterDots"><!-- 由 JS 渲染 --></div>
+          <!-- DepthCarousel（react-bits DepthCarousel-JS-CSS 的原生移植版）：
+               3D 层叠布局 / 指针拖拽 / 横向滚轮 / 键盘 ← → / 箭头 / 圆点，
+               由 js/depth-carousel.js 渲染，数据来自 content.json 的 posters[] -->
+          <div id="depthCarousel"></div>
+          <div class="dc-caption" id="posterCaption"><!-- 展签：随当前海报更新 --></div>
           <div class="poster-empty" id="posterEmpty"><!-- 空态（仅编辑器预览态可见） --></div>
         </div>
       </div>
@@ -320,6 +353,12 @@
   <script src="vendor/ScrollTrigger.min.js"></script>
   <script src="vendor/SplitText.min.js"></script>
   <script src="vendor/lenis.min.js"></script>
+  <!-- 视觉海报 3D 旋转木马（react-bits DepthCarousel-JS-CSS 的原生移植版）：
+       必须在 main.js 之前加载——renderPosters() 直接调用 window.DepthCarousel.create() -->
+  <script src="js/depth-carousel.js"></script>
   <script src="js/main.js"></script>
+  <!-- 入场错峰 + 分层视差（在 main.js 之后：需要 .reveal 已由 main.js 接管） -->
+  <script src="js/motion.js"></script>
+  <script src="js/hero-window.js"></script>
 </body>
 </html>

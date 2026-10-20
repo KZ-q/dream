@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================
+  孔诸祺 · AIGC 影像创作 —— 作品详情页（work.html）
+  ==========================================================================
+  定位：单文件、零构建、零依赖（内联 <style> + 内联 <script>），直接放在
+        public/workshop/ 下即可访问：/workshop/work.html?id=01
+
+  数据来源：同目录 content.json 的 works 数组（与首页作品区完全同源）
+    - 必填（现有数据已有）：no / title / desc / tags[] / cover / bilibili / local
+    - 可选（content.json 里没有就显示占位，工坊或手工补上即可自动生效）：
+        gallery    图集数组    [{ src, caption }]
+        highlights 功能亮点数组 [{ title, desc }]
+        detail     项目长文（支持 \n 换行）
+        year       年份        role     担任角色      type     作品类型
+        client     客户/合作方  duration 时长          link     项目直达链接
+
+  ⚠️ 需替换的占位字段（页面里会以虚线框 +「占位」角标显示）：
+        {{作品年份}} {{担任角色}} {{作品类型}} {{客户/合作方}} {{项目时长}}
+        {{项目长文}} {{功能亮点1/2/3}} {{图集说明}}
+        访问项目按钮：无 bilibili 且无 link 时置灰并提示「待补充」
+
+  接入方式：见文件末尾「接入清单」注释
+  ==========================================================================
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>{{作品标题}} · 孔诸祺 AIGC 影像创作</title>
+<meta name="description" content="作品详情 · 孔诸祺 AIGC 影像创作" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+
+<style>
+/* ============ 1. 设计变量（与作品站主站浅色品牌体系一致） ============ */
+:root{
+  --bg:#0E141B;          /* 页面底色：墨蓝近黑 */
+  --surface:#161F29;     /* 卡片底（亮一档） */
+  --ink:#EAF0F7;         /* 标题近白 */
+  --text:#C2CCD8;        /* 正文 */
+  --muted:#8A99AB;       /* 次要文字 */
+  --line:#243040;        /* 分割线 */
+  --line-soft:#1D2733;   /* 内嵌浅底 */
+  --primary:#6E93C4;     /* 品牌钢蓝 */
+  --accent:#C8A26A;      /* 点缀青铜金 */
+  --cta:#C09155;         /* CTA 青铜金（降饱和） */
+  --radius:26px;
+  --radius-sm:14px;
+  --pad:clamp(18px,4vw,40px);
+  --maxw:1180px;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --stagger:72ms;
+  --font-display:'Playfair Display', Georgia, 'Songti SC', SimSun, serif;
+  --font-body:'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --shadow-sm:0 4px 16px rgba(0,0,0,.35);
+  --shadow-md:0 14px 44px rgba(0,0,0,.45);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body); line-height:1.75;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+img,video{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+body.modal-open{overflow:hidden}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+/* ============ 2. 吸顶操作栏（返回列表 / 标题 / 访问项目） ============ */
+.topbar{
+  position:sticky; top:0; z-index:80;
+  display:flex; align-items:center; gap:12px;
+  padding:14px var(--pad);
+  padding-top:max(14px, env(safe-area-inset-top));
+  background:rgba(14,20,27,.72);
+  -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
+  border-bottom:1px solid transparent;
+  transition:padding .3s var(--ease-out), background .3s ease,
+             border-color .3s ease, box-shadow .3s ease;
+}
+.topbar.is-compact{
+  padding-block:8px; background:rgba(14,20,27,.94);
+  border-bottom-color:var(--line); box-shadow:var(--shadow-sm);
+}
+.topbar__back,.topbar__cta{
+  flex:0 0 auto; display:inline-flex; align-items:center; gap:8px;
+  font-size:14px; font-weight:500; white-space:nowrap;
+  border-radius:999px; padding:9px 16px;
+  transition:background .25s ease, color .25s ease, transform .25s var(--ease-out), opacity .25s ease;
+}
+.topbar__back{border:1px solid var(--line); background:var(--surface); color:var(--ink)}
+.topbar__back:hover{border-color:var(--primary); transform:translateX(-3px)}
+.topbar__cta{
+  border:0; color:#10161D; font-weight:600;
+  background:linear-gradient(180deg,#D9B482,#C09155);
+  box-shadow:0 8px 22px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.20);
+}
+.topbar__cta:hover{transform:translateY(-2px); background:linear-gradient(180deg,#E5C295,#CCA06A)}
+.topbar__cta[aria-disabled="true"]{
+  background:var(--line-soft); color:var(--muted); box-shadow:none; cursor:not-allowed;
+}
+.topbar__title{
+  flex:1 1 auto; min-width:0; text-align:center;
+  font-family:var(--font-display); font-weight:600; font-size:clamp(15px,1.4vw,19px);
+  color:var(--ink); letter-spacing:.04em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  opacity:0; transform:translateY(6px);
+  transition:opacity .32s var(--ease-out), transform .32s var(--ease-out);
+}
+.topbar.is-compact .topbar__title{opacity:1; transform:none}
+
+/* ============ 3. 页面骨架 ============ */
+.page{max-width:var(--maxw); margin:0 auto; padding:clamp(20px,3.4vw,44px) var(--pad) 80px}
+
+/* 大图封面 */
+.cover{
+  position:relative; border-radius:var(--radius); overflow:hidden;
+  background:#0A1119; aspect-ratio:16/9; max-height:min(58vh,540px);
+  box-shadow:var(--shadow-md); cursor:zoom-in;
+}
+.cover img{width:100%; height:100%; object-fit:cover}
+.cover::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,0) 34%,rgba(4,18,28,.42) 100%);
+}
+.cover__no{
+  position:absolute; left:clamp(14px,2vw,26px); top:clamp(14px,2vw,26px); z-index:2;
+  font-family:var(--font-display); font-size:12px; letter-spacing:.32em;
+  color:#fff; background:rgba(6,22,31,.42); padding:6px 14px; border-radius:999px;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+.cover__zoom{
+  position:absolute; right:clamp(14px,2vw,26px); bottom:clamp(14px,2vw,26px); z-index:2;
+  appearance:none; border:0; cursor:pointer; color:#fff; font-size:13px; font-weight:500;
+  background:rgba(6,22,31,.42); padding:9px 18px; border-radius:999px;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  transition:background .25s ease, transform .25s var(--ease-out);
+}
+.cover__zoom:hover{background:rgba(6,22,31,.62); transform:translateY(-2px)}
+
+/* 主副两栏 */
+.layout{
+  display:grid; grid-template-columns:minmax(0,1fr) 320px;
+  gap:clamp(24px,3.2vw,48px); align-items:start; margin-top:clamp(24px,3.6vw,44px);
+}
+.head h1{
+  margin:0; font-family:var(--font-display); font-weight:600; color:var(--ink);
+  font-size:clamp(1.75rem,3.4vw,2.7rem); line-height:1.16; letter-spacing:-.012em;
+}
+.head__sub{margin:10px 0 0; font-size:clamp(14px,1.05vw,17px); color:var(--muted)}
+.head__chips{margin-top:16px; display:flex; flex-wrap:wrap; gap:8px}
+
+/* 区块 */
+.block{margin-top:clamp(30px,4.4vw,54px)}
+.block > h2{
+  margin:0 0 18px; font-family:var(--font-display); font-weight:600;
+  font-size:clamp(17px,1.5vw,21px); color:var(--ink); letter-spacing:.05em;
+  display:flex; align-items:center; gap:12px;
+}
+.block > h2::after{content:""; flex:1; height:1px; background:var(--line)}
+.intro{font-size:clamp(14px,1.02vw,16.5px); line-height:1.95; color:var(--text)}
+.intro p{margin:0 0 14px}
+.intro p:last-child{margin-bottom:0}
+
+/* 功能亮点 */
+.hl-list{list-style:none; margin:0; padding:0; display:grid; gap:14px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.hl-list li{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:18px 20px; transition:transform .3s var(--ease-out), box-shadow .3s ease, border-color .3s ease;
+}
+.hl-list li:hover{transform:translateY(-4px); box-shadow:var(--shadow-sm); border-color:var(--accent)}
+.hl-list h3{margin:0 0 6px; font-size:15px; font-weight:600; color:var(--ink)}
+.hl-list p{margin:0; font-size:13.5px; color:var(--muted); line-height:1.7}
+
+/* 图集 */
+.gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px}
+.gallery figure{
+  margin:0; position:relative; border-radius:var(--radius-sm); overflow:hidden;
+  background:var(--line-soft); aspect-ratio:4/3; cursor:zoom-in;
+  transition:transform .35s var(--ease-out), box-shadow .35s ease;
+}
+.gallery figure:hover{transform:translateY(-4px) scale(1.015); box-shadow:var(--shadow-sm)}
+.gallery img{width:100%; height:100%; object-fit:cover}
+.gallery figcaption{
+  position:absolute; inset:auto 0 0 0; padding:18px 12px 10px; font-size:12px; color:#fff;
+  background:linear-gradient(180deg,rgba(4,18,28,0),rgba(4,18,28,.62));
+}
+.gallery figure.is-hidden{display:none}
+.gallery-more{
+  margin-top:16px; appearance:none; cursor:pointer; width:100%;
+  border:1px dashed var(--line); background:transparent; color:var(--muted);
+  border-radius:var(--radius-sm); padding:12px; font-size:14px;
+  transition:border-color .25s ease, color .25s ease, background .25s ease;
+}
+.gallery-more:hover{border-color:var(--primary); color:var(--ink); background:var(--surface)}
+
+/* 标签 / 药丸 */
+.chips{display:flex; flex-wrap:wrap; gap:9px}
+.chip{
+  font-size:12.5px; color:var(--primary); background:var(--surface);
+  border:1px solid var(--line); border-radius:999px; padding:6px 14px;
+  transition:border-color .25s ease, transform .25s var(--ease-out);
+}
+.chip:hover{border-color:var(--accent); transform:translateY(-2px)}
+.chip--ghost{background:transparent; color:var(--muted)}
+
+/* 侧边信息卡（滚动时吸顶，关键信息常驻） */
+.sidecard{
+  position:sticky; top:78px;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:clamp(18px,2vw,24px); box-shadow:var(--shadow-sm);
+}
+.sidecard h3{
+  margin:0 0 14px; font-size:12px; letter-spacing:.28em; color:var(--accent);
+  font-weight:600; text-transform:uppercase;
+}
+.meta-list{margin:0; display:grid; gap:12px}
+.meta-row{display:flex; justify-content:space-between; gap:14px; font-size:13.5px}
+.meta-row dt{color:var(--muted); flex:0 0 auto}
+.meta-row dd{margin:0; color:var(--ink); text-align:right; font-weight:500; min-width:0; word-break:break-word}
+.sidecard__links{margin-top:20px; padding-top:18px; border-top:1px solid var(--line-soft); display:grid; gap:10px}
+.side-link{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  font-size:14px; color:var(--ink); padding:11px 14px; border-radius:12px;
+  border:1px solid var(--line); background:var(--surface);
+  transition:border-color .25s ease, transform .25s var(--ease-out), background .25s ease;
+}
+.side-link:hover{border-color:var(--primary); transform:translateX(3px)}
+.side-link--primary{
+  border:0; color:#10161D; font-weight:600; justify-content:center;
+  background:linear-gradient(180deg,#D9B482,#C09155); box-shadow:0 8px 22px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.20);
+}
+.side-link--primary:hover{transform:translateY(-2px); background:linear-gradient(180deg,#E5C295,#CCA06A)}
+.side-link[aria-disabled="true"]{background:var(--line-soft); color:var(--muted); cursor:not-allowed; box-shadow:none}
+
+/* 上/下一个作品 */
+.pager{
+  margin-top:clamp(34px,5vw,60px); padding-top:26px; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+}
+.pager a{
+  max-width:48%; font-size:14px; color:var(--muted);
+  transition:color .25s ease, transform .25s var(--ease-out);
+}
+.pager a:hover{color:var(--ink); transform:translateY(-2px)}
+.pager strong{display:block; font-family:var(--font-display); font-size:17px; color:var(--ink); margin-top:4px}
+
+/* 占位标记 */
+.ph{border:1px dashed #33414F !important; background:var(--surface)}
+.ph-tag{
+  display:inline-block; font-size:10px; letter-spacing:.12em; color:#7C8A9B;
+  border:1px dashed #33414F; border-radius:999px; padding:1px 8px; margin-left:8px; vertical-align:2px;
+}
+.phv{color:#7C8A9B; border-bottom:1px dashed #33414F}
+
+/* ============ 4. 图片灯箱（点击查看 / 左右切换 / 键盘 / 滑动） ============ */
+.lb{
+  position:fixed; inset:0; z-index:200; display:grid; place-items:center;
+  padding:clamp(16px,4vw,48px); color:#fff;
+  opacity:0; transition:opacity .32s ease;
+}
+.lb[hidden]{display:none}
+.lb.is-open{opacity:1}
+.lb__scrim{position:absolute; inset:0; background:rgba(6,18,28,.9);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+.lb__figure{position:relative; z-index:2; margin:0; max-width:min(1100px,100%); text-align:center}
+.lb__figure img{
+  max-width:100%; max-height:74vh; width:auto; margin:0 auto;
+  border-radius:16px; box-shadow:0 30px 80px rgba(0,0,0,.5);
+  transform:scale(.96); opacity:0;
+  transition:transform .42s var(--ease-out), opacity .32s ease;
+}
+.lb.is-open .lb__figure img{transform:none; opacity:1}
+.lb__figure figcaption{margin-top:14px; font-size:13px; color:rgba(255,255,255,.78)}
+.lb__counter{margin-left:10px; color:rgba(255,255,255,.55); font-variant-numeric:tabular-nums}
+.lb__btn{
+  position:absolute; z-index:3; top:50%; transform:translateY(-50%);
+  appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10);
+  color:#fff; width:46px; height:46px; border-radius:50%; font-size:22px; line-height:1;
+  cursor:pointer; display:grid; place-items:center;
+  transition:background .25s ease, transform .25s var(--ease-out), opacity .25s ease;
+}
+.lb__btn:hover{background:rgba(255,255,255,.22); transform:translateY(-50%) scale(1.06)}
+.lb__btn[hidden]{display:none}
+.lb__prev{left:clamp(8px,3vw,32px)}
+.lb__next{right:clamp(8px,3vw,32px)}
+.lb__close{
+  position:absolute; z-index:3; top:clamp(14px,3vw,32px); right:clamp(14px,3vw,32px);
+  appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10);
+  color:#fff; width:42px; height:42px; border-radius:50%; cursor:pointer; font-size:18px;
+  transition:background .25s ease, transform .25s var(--ease-out);
+}
+.lb__close:hover{background:rgba(255,255,255,.22); transform:rotate(90deg)}
+.lb__dots{
+  position:absolute; z-index:3; left:0; right:0; bottom:clamp(14px,3vw,30px);
+  display:flex; justify-content:center; gap:8px;
+}
+.lb__dots button{
+  appearance:none; border:0; padding:0; width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,.32); cursor:pointer; transition:background .25s ease, transform .25s ease;
+}
+.lb__dots button.is-on{background:#fff; transform:scale(1.5)}
+
+/* ============ 5. 入场动画 ============ */
+.anim{
+  opacity:0; transform:translate3d(0,18px,0);
+  transition:opacity .8s var(--ease-out), transform .8s var(--ease-out);
+  transition-delay:calc(var(--d,0) * var(--stagger));
+}
+.anim.is-in{opacity:1; transform:none}
+
+/* ============ 6. 响应式 ============ */
+@media (max-width:1024px){
+  .layout{grid-template-columns:minmax(0,1fr) 280px}
+}
+@media (max-width:900px){                     /* 单栏：信息卡改为静态流 */
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .sidecard{position:static; top:auto}
+  .cover{max-height:none}
+}
+@media (max-width:768px){
+  .topbar__title{display:none}
+  .topbar__back,.topbar__cta{padding:8px 13px; font-size:13px}
+  .gallery{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+  .hl-list{grid-template-columns:minmax(0,1fr)}
+  .cover{border-radius:18px}
+  .lb__btn{width:40px; height:40px}
+  .pager a{max-width:100%}
+}
+@media (max-width:420px){
+  .gallery{grid-template-columns:minmax(0,1fr)}
+  .head h1{font-size:1.6rem}
+}
+@media (max-height:620px){                     /* 矮视口不强制留白 */
+  .cover{max-height:min(46vh,420px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; transition-duration:.01ms !important; transition-delay:0s !important}
+  .anim{opacity:1 !important; transform:none !important}
+}
+</style>
+</head>
+
+<body>
+<!-- ===== 吸顶操作栏：返回列表 / 标题（滚动后浮现）/ 访问项目 ===== -->
+<header class="topbar" id="topbar">
+  <a class="topbar__back" href="index.html#works" id="backLink">← 返回作品列表</a>
+  <span class="topbar__title" id="topbarTitle">{{作品标题}}</span>
+  <a class="topbar__cta" id="topbarCta" href="#" target="_blank" rel="noopener">访问项目 ↗</a>
+</header>
+
+<main class="page">
+  <!-- ===== 大图封面：点击进灯箱 ===== -->
+  <section class="cover anim" id="cover" style="--d:0">
+    <img id="coverImg" src="" alt="作品封面" />
+    <span class="cover__no" id="coverNo">01</span>
+    <button class="cover__zoom" id="coverZoom" type="button">⤢ 查看大图</button>
+  </section>
+
+  <div class="layout">
+    <!-- ===== 主信息区 ===== -->
+    <div class="col-main">
+      <header class="head anim" style="--d:1">
+        <h1 id="workTitle">{{作品标题}}</h1>
+        <p class="head__sub" id="workDesc">{{一句话简介}}</p>
+        <div class="head__chips chips" id="headChips"></div>
+      </header>
+
+      <section class="block anim" style="--d:2">
+        <h2>项目简介</h2>
+        <div class="intro" id="workIntro"></div>
+      </section>
+
+      <section class="block anim" style="--d:3">
+        <h2>核心功能亮点</h2>
+        <ul class="hl-list" id="highlights"></ul>
+      </section>
+
+      <section class="block anim" style="--d:4">
+        <h2>作品图集</h2>
+        <div class="gallery" id="gallery"></div>
+        <button class="gallery-more" id="galleryMore" type="button" hidden></button>
+      </section>
+
+      <section class="block anim" style="--d:5">
+        <h2>技术栈标签</h2>
+        <div class="chips" id="tags"></div>
+      </section>
+    </div>
+
+    <!-- ===== 侧边信息卡：关键信息 + 操作入口（滚动吸顶） ===== -->
+    <aside class="col-side">
+      <div class="sidecard anim" style="--d:2">
+        <h3>Project Info</h3>
+        <dl class="meta-list" id="metaList"></dl>
+        <div class="sidecard__links" id="sideLinks"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ===== 上一个 / 下一个作品 ===== -->
+  <nav class="pager" id="pager" aria-label="作品导航"></nav>
+</main>
+
+<!-- ===== 图片灯箱 ===== -->
+<div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="图片查看器" hidden>
+  <div class="lb__scrim" data-lb-close></div>
+  <button class="lb__close" id="lbClose" type="button" data-lb-close aria-label="关闭">✕</button>
+  <button class="lb__btn lb__prev" id="lbPrev" type="button" aria-label="上一张">‹</button>
+  <figure class="lb__figure">
+    <img id="lbImg" src="" alt="" />
+    <figcaption>
+      <span id="lbCaption"></span><span class="lb__counter" id="lbCounter"></span>
+    </figcaption>
+  </figure>
+  <button class="lb__btn lb__next" id="lbNext" type="button" aria-label="下一张">›</button>
+  <div class="lb__dots" id="lbDots"></div>
+</div>
+
+<script>
+/* ==========================================================================
+   作品详情页脚本（vanilla，单 IIFE）
+   模块：① 数据载入 ② 渲染 ③ 吸顶栏滚动态 ④ 灯箱（点击/切换/键盘/滑动）
+        ⑤ 图集展开 ⑥ 入场动画 ⑦ 作品间导航
+   ========================================================================== */
+(function () {
+  'use strict'
+
+  var $ = function (id) { return document.getElementById(id) }
+  var PH = function (label) { return '<span class="phv">{{' + label + '}}</span>' }
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+    })
+  }
+  /* 从「整条 B站链接 / 带前缀的链接 / 纯 BV 号」里取出 BV 号（与主站逻辑一致） */
+  function extractBvid(s) {
+    if (!s) return ''
+    var str = String(s)
+    var exact = str.match(/BV[0-9A-Za-z]{10}/)
+    if (exact) return exact[0]
+    var loose = str.match(/BV[0-9A-Za-z]+/i)
+    return loose ? loose[0] : str.trim()
+  }
+
+  var STATE = { work: null, works: [], index: -1, gallery: [], lbIndex: 0 }
+
+  /* ---------- ① 数据载入：读同目录 content.json，按 ?id（编号）或 ?t（标题）定位 ---------- */
+  function currentId() {
+    var q = new URLSearchParams(location.search)
+    return { id: (q.get('id') || '').trim(), t: (q.get('t') || '').trim() }
+  }
+  function pickWork(works) {
+    var q = currentId()
+    var i = -1
+    if (q.id) i = works.findIndex(function (w) { return String(w.no || '') === q.id })
+    if (i < 0 && q.t) i = works.findIndex(function (w) { return String(w.title || '') === q.t })
+    if (i < 0) i = works.findIndex(function (w) { return String(w.no || '') === '01' })
+    if (i < 0) i = 0
+    return i
+  }
+
+  function load() {
+    fetch('content.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
+      .then(function (json) {
+        var works = Array.isArray(json.works) && json.works.length ? json.works : [FALLBACK_WORK]
+        STATE.works = works
+        STATE.index = pickWork(works)
+        STATE.work = works[STATE.index]
+        render(STATE.work)
+      })
+      .catch(function () {
+        /* 兜底：content.json 取不到时用占位作品，保证页面结构完整可见 */
+        STATE.works = [FALLBACK_WORK]
+        STATE.index = 0
+        STATE.work = FALLBACK_WORK
+        render(FALLBACK_WORK)
+      })
+  }
+
+  /* 占位作品（content.json 不可用时的完整骨架，所有可替换字段都标了占位） */
+  var FALLBACK_WORK = {
+    no: '01',
+    title: '{{作品标题}}',
+    desc: '{{一句话简介}}',
+    tags: ['{{技术标签1}}', '{{技术标签2}}', '{{技术标签3}}'],
+    cover: '',
+    bilibili: '',
+    local: '',
+    year: '', role: '', type: '', client: '', duration: '', detail: '',
+    gallery: [], highlights: []
+  }
+
+  /* ---------- ② 渲染 ---------- */
+  function render(w) {
+    document.title = (w.title || '作品详情') + ' · 孔诸祺 AIGC 影像创作'
+    $('topbarTitle').textContent = w.title || '作品详情'
+    $('workTitle').textContent = w.title || '{{作品标题}}'
+    $('workDesc').textContent = w.desc || PH('一句话简介')
+    $('coverNo').textContent = w.no ? 'NO.' + w.no : 'NO.—'
+
+    /* 封面：无图时用纯色占位块 */
+    var coverImg = $('coverImg')
+    if (w.cover) { coverImg.src = w.cover; coverImg.alt = (w.title || '作品') + ' 封面' }
+    else { coverImg.removeAttribute('src'); coverImg.alt = '封面占位' }
+
+    /* 图集：优先 gallery，其次封面，最后占位图（占位项带虚线框 + 角标） */
+    var gal = []
+    if (Array.isArray(w.gallery) && w.gallery.length) {
+      gal = w.gallery.map(function (g) {
+        return { src: g && g.src ? g.src : '', caption: (g && g.caption) || PH('图集说明') }
+      })
+    } else if (w.cover) {
+      gal = [{ src: w.cover, caption: (w.title || '') + ' · 主视觉' }]
+    } else {
+      gal = [
+        { src: '', caption: PH('图集说明1') },
+        { src: '', caption: PH('图集说明2') },
+        { src: '', caption: PH('图集说明3') }
+      ]
+    }
+    STATE.gallery = gal
+    renderGallery(gal)
+    renderHighlights(w)
+    renderTags(w)
+    renderIntro(w)
+    renderMeta(w)
+    renderLinks(w)
+    renderPager()
+    observeAnim()
+  }
+
+  function renderGallery(gal) {
+    var box = $('gallery')
+    box.innerHTML = gal.map(function (g, i) {
+      var inner = g.src
+        ? '<img src="' + esc(g.src) + '" alt="' + esc(g.caption) + '" loading="lazy" />'
+        : '<div style="width:100%;height:100%;display:grid;place-items:center;color:#7C8A9B;font-size:12px">占位图</div>'
+      var phTag = g.src ? '' : '<span class="ph-tag">占位</span>'
+      return '<figure class="' + (i >= 6 ? 'is-hidden' : '') + '" data-i="' + i + '" tabindex="0" role="button" aria-label="查看第 ' + (i + 1) + ' 张">' +
+        inner + '<figcaption>' + esc(g.caption) + phTag + '</figcaption></figure>'
+    }).join('')
+    var more = $('galleryMore')
+    if (gal.length > 6) {
+      more.hidden = false
+      more.textContent = '展开全部（还有 ' + (gal.length - 6) + ' 张）'
+      more.dataset.state = 'collapsed'
+    } else { more.hidden = true }
+  }
+
+  function renderHighlights(w) {
+    var list = Array.isArray(w.highlights) && w.highlights.length ? w.highlights : null
+    var items = list || [
+      { title: '{{功能亮点1标题}}', desc: '{{功能亮点1描述}}' },
+      { title: '{{功能亮点2标题}}', desc: '{{功能亮点2描述}}' },
+      { title: '{{功能亮点3标题}}', desc: '{{功能亮点3描述}}' }
+    ]
+    $('highlights').innerHTML = items.map(function (h) {
+      var phTag = list ? '' : '<span class="ph-tag">占位</span>'
+      return '<li class="' + (list ? '' : 'ph') + '"><h3>' + esc(h.title || '') + phTag + '</h3><p>' + esc(h.desc || '') + '</p></li>'
+    }).join('')
+  }
+
+  function renderTags(w) {
+    var tags = Array.isArray(w.tags) && w.tags.length ? w.tags : ['{{技术标签}}']
+    $('tags').innerHTML = tags.map(function (t) { return '<span class="chip">' + esc(t) + '</span>' }).join('')
+    /* 头部小药丸：年份 / 类型（缺失走占位） */
+    var head = []
+    if (w.year) head.push(w.year)
+    if (w.type) head.push(w.type)
+    if (!head.length) head.push('{{作品年份}} · {{作品类型}}')
+    $('headChips').innerHTML = head.map(function (t) { return '<span class="chip chip--ghost">' + esc(t) + '</span>' }).join('')
+  }
+
+  function renderIntro(w) {
+    var paras = []
+    var d = (w.detail || '').trim()
+    if (d) {
+      paras = d.split(/\n+/).map(function (p) { return '<p>' + esc(p) + '</p>' })
+    } else {
+      paras = ['<p>' + esc(w.desc || '') + '</p>', '<p>' + PH('项目长文：可写创作背景、流程、难点与结果') + '</p>']
+    }
+    $('workIntro').innerHTML = paras.join('')
+  }
+
+  function renderMeta(w) {
+    var rows = [
+      ['编号', w.no ? 'NO.' + w.no : '—'],
+      ['年份', w.year || PH('作品年份')],
+      ['类型', w.type || PH('作品类型')],
+      ['角色', w.role || PH('担任角色')],
+      ['客户', w.client || PH('客户/合作方')],
+      ['时长', w.duration || PH('项目时长')]
+    ]
+    $('metaList').innerHTML = rows.map(function (r) {
+      return '<div class="meta-row"><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'
+    }).join('')
+  }
+
+  function renderLinks(w) {
+    var bv = extractBvid(w.bilibili)
+    var biliUrl = bv ? 'https://www.bilibili.com/video/' + bv : ''
+    var direct = w.link || ''
+    var primary = direct || biliUrl
+    var cta = $('topbarCta')
+
+    if (primary) {
+      cta.href = primary
+      cta.removeAttribute('aria-disabled')
+      cta.textContent = direct ? '访问项目 ↗' : '在 B站观看 ↗'
+    } else {
+      cta.removeAttribute('href')
+      cta.setAttribute('aria-disabled', 'true')
+      cta.textContent = '链接待补充'
+    }
+
+    var links = []
+    links.push(primary
+      ? '<a class="side-link side-link--primary" href="' + esc(primary) + '" target="_blank" rel="noopener">' +
+        (direct ? '访问项目 ↗' : '在 B站观看 ↗') + '</a>'
+      : '<span class="side-link side-link--primary" aria-disabled="true">访问项目 · 待补充</span>')
+    if (biliUrl && direct) {
+      links.push('<a class="side-link" href="' + esc(biliUrl) + '" target="_blank" rel="noopener"><span>B站视频</span><span>↗</span></a>')
+    }
+    if (w.local) {
+      links.push('<a class="side-link" href="' + esc(w.local) + '" target="_blank" rel="noopener"><span>本地视频源</span><span>↗</span></a>')
+    }
+    links.push('<a class="side-link" href="index.html#works"><span>返回作品列表</span><span>←</span></a>')
+    $('sideLinks').innerHTML = links.join('')
+  }
+
+  function renderPager() {
+    var box = $('pager')
+    var prev = STATE.works[STATE.index - 1]
+    var next = STATE.works[STATE.index + 1]
+    var href = function (w) { return 'work.html?id=' + encodeURIComponent(w.no || w.title || '') }
+    box.innerHTML =
+      (prev ? '<a href="' + href(prev) + '">上一个作品<strong>' + esc(prev.title || '') + '</strong></a>' : '<span></span>') +
+      (next ? '<a href="' + href(next) + '" style="text-align:right">下一个作品<strong>' + esc(next.title || '') + '</strong></a>' : '<span></span>')
+  }
+
+  /* ---------- ③ 吸顶栏滚动态：>24px 收紧内边距、显示标题与分割线 ---------- */
+  var topbar = $('topbar')
+  function onScroll() { topbar.classList.toggle('is-compact', window.scrollY > 24) }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+
+  /* ---------- ④ 灯箱：点击封面/缩略图打开，← → 切换，Esc/点遮罩/✕ 关闭，移动端左右滑动 ---------- */
+  var lb = $('lightbox')
+  var lbImg = $('lbImg')
+
+  function openLb(i) {
+    if (!STATE.gallery.length) return
+    STATE.lbIndex = Math.max(0, Math.min(i, STATE.gallery.length - 1))
+    var g = STATE.gallery[STATE.lbIndex]
+    lbImg.src = g.src || ''
+    lbImg.alt = g.caption || ''
+    $('lbCaption').textContent = g.caption || ''
+    $('lbCounter').textContent = (STATE.lbIndex + 1) + ' / ' + STATE.gallery.length
+    $('lbPrev').hidden = STATE.gallery.length < 2
+    $('lbNext').hidden = STATE.gallery.length < 2
+    $('lbDots').innerHTML = STATE.gallery.length > 1
+      ? STATE.gallery.map(function (_, k) {
+          return '<button type="button" class="' + (k === STATE.lbIndex ? 'is-on' : '') + '" data-k="' + k + '" aria-label="第 ' + (k + 1) + ' 张"></button>'
+        }).join('')
+      : ''
+    lb.hidden = false
+    document.body.classList.add('modal-open')
+    requestAnimationFrame(function () { lb.classList.add('is-open') })
+    $('lbClose').focus()
+  }
+  function closeLb() {
+    lb.classList.remove('is-open')
+    document.body.classList.remove('modal-open')
+    setTimeout(function () { lb.hidden = true }, 320)
+  }
+  function goLb(delta) {
+    if (STATE.gallery.length < 2) return
+    openLb((STATE.lbIndex + delta + STATE.gallery.length) % STATE.gallery.length)
+  }
+
+  $('cover').addEventListener('click', function () { openLb(0) })
+  $('coverZoom').addEventListener('click', function (e) { e.stopPropagation(); openLb(0) })
+  $('gallery').addEventListener('click', function (e) {
+    var fig = e.target.closest('figure')
+    if (fig) openLb(parseInt(fig.dataset.i, 10) || 0)
+  })
+  $('gallery').addEventListener('keydown', function (e) {
+    var fig = e.target.closest && e.target.closest('figure')
+    if (fig && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openLb(parseInt(fig.dataset.i, 10) || 0) }
+  })
+  $('lbPrev').addEventListener('click', function () { goLb(-1) })
+  $('lbNext').addEventListener('click', function () { goLb(1) })
+  lb.addEventListener('click', function (e) { if (e.target.hasAttribute('data-lb-close')) closeLb() })
+  $('lbDots').addEventListener('click', function (e) {
+    var k = e.target.dataset && e.target.dataset.k
+    if (k !== undefined) openLb(parseInt(k, 10))
+  })
+  document.addEventListener('keydown', function (e) {
+    if (lb.hidden) return
+    if (e.key === 'Escape' || e.key === 'Esc') closeLb()
+    else if (e.key === 'ArrowLeft') goLb(-1)
+    else if (e.key === 'ArrowRight') goLb(1)
+  })
+  /* 触摸滑动切换（横向位移 > 45px 判定） */
+  var tx = 0, ty = 0
+  lb.addEventListener('touchstart', function (e) {
+    tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY
+  }, { passive: true })
+  lb.addEventListener('touchend', function (e) {
+    var dx = e.changedTouches[0].clientX - tx
+    var dy = e.changedTouches[0].clientY - ty
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) goLb(dx < 0 ? 1 : -1)
+  }, { passive: true })
+
+  /* ---------- ⑤ 图集展开/收起：超过 6 张时折叠 ---------- */
+  $('galleryMore').addEventListener('click', function () {
+    var btn = this
+    var collapsed = btn.dataset.state === 'collapsed'
+    Array.prototype.forEach.call($('gallery').querySelectorAll('figure'), function (fig, i) {
+      if (i >= 6) fig.classList.toggle('is-hidden', !collapsed)
+    })
+    btn.dataset.state = collapsed ? 'expanded' : 'collapsed'
+    btn.textContent = collapsed ? '收起图集' : '展开全部（还有 ' + (STATE.gallery.length - 6) + ' 张）'
+  })
+
+  /* ---------- ⑥ 入场动画：进入视口即淡入上移（reduced-motion 下直接可见） ---------- */
+  function observeAnim() {
+    var els = document.querySelectorAll('.anim')
+    if (!('IntersectionObserver' in window)) {
+      Array.prototype.forEach.call(els, function (el) { el.classList.add('is-in') })
+      return
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target) }
+      })
+    }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 })
+    Array.prototype.forEach.call(els, function (el) { io.observe(el) })
+  }
+
+  load()
+})()
+</script>
+
+<!--
+  ==========================================================================
+  接入清单（三步）
+  1) 本文件放 public/workshop/work.html（与 index.html 同级）。
+  2) 作品卡跳转：在 main.js 的 renderWorks 里给封面/标题包一层
+     <a class="work-link" href="work.html?id=${w.no}">，并在卡片点击委托里加
+     if (e.target.closest('.work-link')) return   ← 点详情不再弹视频窗，
+     「▶ 播放短片」按钮行为保持不变。
+  3) 可选字段：往 content.json 的 works[i] 里补
+     gallery / highlights / detail / year / role / type / client / duration / link，
+     补上后占位自动消失；工坊面板可后续加对应输入框。
+  ==========================================================================
+-->
+</body>
+</html>

@@ -1,12 +1,12 @@
 /* ============================================================
    孔诸祺 · AIGC 影像创作 — 交互脚本（数据驱动版）
    功能：
-   1) 启动画面（Splash）2) 滚动进度条 3) 分层视差 4) 滚动淡入
-   5) 导航高亮 6) 视频弹窗（本地视频 / B站外链）
-   7) 内容绑定：从 content.json 渲染，并支持工坊实时预览（postMessage）
-   8) Animated Footer：Lenis 平滑滚动 + GSAP SplitText + ASCII 双手
-   9) MagicBento 粒子边框：能力卡边框辉光 + 悬停微粒（react-bits 克制版移植）
-  10) AI 音乐创作：音频作品卡试听（视觉与「碎片实验」同族）
+   1) 滚动进度条 2) 分层视差 3) 滚动淡入
+   4) 导航高亮 5) 视频弹窗（本地视频 / B站外链）
+   6) 内容绑定：从 content.json 渲染，并支持工坊实时预览（postMessage）
+   7) Animated Footer：Lenis 平滑滚动 + GSAP SplitText + ASCII 双手
+   8) MagicBento 粒子边框：能力卡边框辉光 + 悬停微粒（react-bits 克制版移植）
+   9) AI 音乐创作：音频作品卡试听（视觉与「碎片实验」同族）
    ============================================================ */
 
 /* ---------- 0) Lenis 平滑滚动 + GSAP/ScrollTrigger（Animated Footer 基座） ---------- */
@@ -15,7 +15,10 @@ const hasFooterLibs = (typeof gsap !== 'undefined') && (typeof ScrollTrigger !==
 let lenis = null
 if (hasFooterLibs) {
   gsap.registerPlugin(ScrollTrigger)
-  lenis = new Lenis({ lerp: 0.09 })
+  /* lerp 0.09 → 0.075：跟手速度略降一档，滚动更有"重量"。
+     0.09 时滚轮一动页面几乎立刻到底，行话叫"太轻"；0.075 仍跟手，
+     但收尾多出约 3 帧的余韵，是"沉稳"与"拖沓"之间的分界。 */
+  lenis = new Lenis({ lerp: 0.075 })
   lenis.on('scroll', ScrollTrigger.update)
   /* 守卫：prefers-reduced-motion 下（§11.6）lenis 会被 destroy 并置 null，
      但 ticker 回调仍在每帧执行 —— 不加守卫会 60fps 刷 "Cannot read properties of null (reading 'raf')" */
@@ -71,11 +74,13 @@ function renderWorks(works) {
       data-bilibili="${escHtml(w.bilibili || '')}">
       <div class="work-cover">
         <span class="work-no">${w.no || ''}</span>
-        <img src="${w.cover || ''}" alt="${(w.title || '').replace(/"/g, '')} 封面" loading="lazy" />
+        <a class="work-link" href="work.html?id=${encodeURIComponent(w.no || w.title || '')}" aria-label="查看《${(w.title || '').replace(/"/g, '')}》详情">
+          <img src="${w.cover || ''}" alt="${(w.title || '').replace(/"/g, '')} 封面" loading="lazy" />
+        </a>
         <span class="work-play">▶ 播放短片</span>
       </div>
       <div class="work-info">
-        <h3>${w.title || ''}</h3>
+        <h3><a class="work-link" href="work.html?id=${encodeURIComponent(w.no || w.title || '')}">${w.title || ''}</a></h3>
         <p>${w.desc || ''}</p>
         <div class="work-tags">${(w.tags || []).map((t) => `<span>${t}</span>`).join('')}</div>
         <button class="work-play-btn" type="button">▶ 播放短片</button>
@@ -376,140 +381,146 @@ function escHtml(s) {
 }
 
 /* ============================================================
-   10.5) 视觉海报：竖版画框轮播展示区
+   10.5) 视觉海报：DepthCarousel 3D 旋转木马展示区
+   - 组件：js/depth-carousel.js（react-bits「DepthCarousel-JS-CSS」的原生移植版）
+     3D 层叠（translateX/Z + rotateY + 亮度/模糊衰减）/ 指针拖拽 / 横向滚轮 /
+     键盘 ← → / 点击卡片 / 箭头 / 圆点；悬停或聚焦时暂停自动播放
    - 数据：content.json 的 posters[]（src / title / desc；src 为空的行自动忽略）
-   - 海报是竖版素材（3:4 / 9:16）：画框定 3:4 + 主图 object-fit:contain，
-     **绝不能**用 16:9 + cover —— 那样一张竖版海报会被裁掉约六成画面
-   - 窄屏/比例不符时用同图虚化做氛围背景垫留白（不是纯色，画面感更强）
-   - 轨道平移式轮播：箭头 / 指示点 / 键盘 ← → / 触屏滑动，鼠标悬停暂停
-   - 进视口才自动播放（省电省流量）；「减少动态」用户不自动播
+   - 海报是竖版素材（3:4 / 9:16）：卡内 object-fit:contain **绝不 cover**
+     —— 一张竖版海报塞进 16:9 容器用 cover 会被裁掉约六成画面
+   - 卡片宽高是 px 值，必须按视口断点切换（POSTER_SIZES.sm / md / lg）；
+     跨断点时重建实例，否则窗口缩放后卡片尺寸不跟着变
+   - 进视口才自动播（省电省流量）；「减少动态」用户由组件内部判定为不自动播
    - 空数据时公开站整块隐藏，编辑器预览态显示上传引导
    ============================================================ */
 const posterRM = window.matchMedia('(prefers-reduced-motion: reduce)')
-let posterTrackEl = null
-let posterSlides = []
-let posterDotEls = []
-let posterIdx = 0
-let posterCount = 0
-let posterTimer = null
-let posterIO = null
+let posterDC = null            /* DepthCarousel 实例 */
+let posterItems = []           /* 最近一次的数据（跨断点重建时复用） */
+let posterBP = ''              /* 当前断点：sm / md / lg */
+let posterIO = null            /* 进视口才自动播 */
+let posterRT = 0               /* resize 防抖句柄 */
 
-function posterGo(n) {
-  if (!posterCount || !posterTrackEl) return
-  posterIdx = ((n % posterCount) + posterCount) % posterCount   /* 循环取模，支持左右越界 */
-  posterTrackEl.style.transform = `translateX(-${posterIdx * 100}%)`
-  posterSlides.forEach((s, i) => {
-    s.classList.toggle('active', i === posterIdx)
-    s.setAttribute('aria-hidden', i === posterIdx ? 'false' : 'true')
-  })
-  posterDotEls.forEach((d, i) => {
-    d.classList.toggle('active', i === posterIdx)
-    d.setAttribute('aria-selected', i === posterIdx ? 'true' : 'false')
-  })
+/* 断点尺寸：与 style.css 里 #depthCarousel 的高度断点一一对应
+   （容器高度 = 卡高 + 上下各约 30px，改卡高必须同步改那边的 clamp，
+     否则圆点指示器会压在画面上）
+   spread 取卡宽的 0.4 倍左右：太小侧卡会被主卡整张盖住（只剩一条边），
+   太大整排会顶到箭头。 */
+const POSTER_SIZES = {
+  sm: { cardWidth: 208, cardHeight: 280, spread: 84, depth: 140, visibleCards: 3, blur: 4, tilt: 18 },
+  md: { cardWidth: 280, cardHeight: 376, spread: 112, depth: 180, visibleCards: 4, blur: 5, tilt: 20 },
+  lg: { cardWidth: 360, cardHeight: 486, spread: 148, depth: 240, visibleCards: 4, blur: 7, tilt: 22 },
 }
-function posterStart() {
-  if (posterCount < 2 || posterTimer || posterRM.matches) return
-  posterTimer = setInterval(() => posterGo(posterIdx + 1), 6000)
-}
-function posterStop() { if (posterTimer) { clearInterval(posterTimer); posterTimer = null } }
 
-/* 属性值专用转义：escHtml 只转 <>，标题/说明是编辑器手输的，含引号会截断 alt="..." */
-function escAttr(s) {
-  return escHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+function posterBreakpoint() {
+  const w = window.innerWidth
+  if (w <= 520) return 'sm'
+  if (w <= 860) return 'md'
+  return 'lg'
+}
+
+/* 展签：标题 / 说明 / 序号（序号用 tabular-nums，位数变化不抖动） */
+function posterCaption(idx) {
+  const cap = document.getElementById('posterCaption')
+  if (!cap) return
+  const it = posterItems[idx]
+  if (!it) { cap.innerHTML = ''; return }
+  const no = String(idx + 1).padStart(2, '0') + ' / ' + String(posterItems.length).padStart(2, '0')
+  cap.innerHTML =
+    (it.title ? '<strong>' + escHtml(it.title) + '</strong>' : '') +
+    (it.desc ? '<span>' + escHtml(it.desc) + '</span>' : '') +
+    '<i class="dc-no">' + no + '</i>'
+}
+
+/* 按当前断点建实例；重复调用先销毁旧实例，避免监听器与定时器叠加
+   （applyContent 会被工坊实时预览反复调用，和旧轮播同一个坑） */
+function posterMount() {
+  const host = document.getElementById('depthCarousel')
+  if (!host || !window.DepthCarousel || !posterItems.length) return
+
+  if (posterDC) { posterDC.destroy(); posterDC = null }
+  posterBP = posterBreakpoint()
+  const size = POSTER_SIZES[posterBP]
+
+  posterDC = window.DepthCarousel.create(host, Object.assign({}, size, {
+    items: posterItems.map((p) => ({ image: p.src, alt: p.title || '海报', title: p.title || '', desc: p.desc || '' })),
+    radius: 16,
+    tint: '#05060a',
+    perspective: 1400,
+    falloff: posterBP === 'sm' ? 0.26 : 0.22,
+    duration: 720,
+    ease: 'power3.out',
+    autoplay: false,          /* 先关：等 IntersectionObserver 确认进视口再开 */
+    autoplayDelay: 6000,
+    loop: true,
+    showControls: true,
+    showIndicators: true,
+    label: '视觉海报轮播',
+    onChange: (i) => posterCaption(i),
+  }))
+
+  posterCaption(0)
 }
 
 function renderPosters(list) {
   const block = document.getElementById('posterBlock')
-  const track = document.getElementById('posterTrack')
-  const dots = document.getElementById('posterDots')
   const emptyEl = document.getElementById('posterEmpty')
-  if (!block || !track) return
-  const items = Array.isArray(list) ? list.filter((p) => p && p.src) : []
+  if (!block) return
 
-  posterStop()
+  posterItems = Array.isArray(list) ? list.filter((p) => p && p.src) : []
+
+  if (posterDC) { posterDC.destroy(); posterDC = null }
   if (posterIO) { posterIO.disconnect(); posterIO = null }
 
-  if (!items.length) {
-    /* 空：公开站点整块不出现（不留空白版块）；编辑器预览态给出上传引导 */
+  if (!posterItems.length) {
+    /* 空：公开站整块不出现（不留空白版块）；编辑器预览态给出上传引导 */
     block.hidden = !wkPreviewMode
-    track.innerHTML = ''
-    if (dots) dots.innerHTML = ''
     if (emptyEl) {
       emptyEl.innerHTML = wkPreviewMode
         ? `<strong>还没有海报</strong><span>打开顶栏 ⚙ 工坊 → 「⑮ 视觉海报」，拖入图片并填好标题与说明，保存后就会出现在这里。</span>`
         : ''
     }
-    posterTrackEl = null; posterSlides = []; posterDotEls = []
-    posterCount = 0; posterIdx = 0
     return
   }
 
   block.hidden = false
   if (emptyEl) emptyEl.innerHTML = ''
-  /* 竖版画框结构：氛围背景层（同图虚化，垫住两侧留白）+ 主图 contain（永不裁切）+ 展签式说明 */
-  track.innerHTML = items.map((p, i) => `
-    <figure class="poster-slide${i === 0 ? ' active' : ''}" data-idx="${i}" aria-hidden="${i === 0 ? 'false' : 'true'}">
-      <div class="poster-bg" style="background-image:url('${escAttr(p.src)}')" aria-hidden="true"></div>
-      <img class="poster-img" src="${escAttr(p.src)}" alt="${escAttr(p.title || '海报')}" loading="${i === 0 ? 'eager' : 'lazy'}" draggable="false" />
-      <figcaption class="poster-cap">
-        ${p.title ? `<strong>${escHtml(p.title)}</strong>` : ''}
-        ${p.desc ? `<span>${escHtml(p.desc)}</span>` : ''}
-        <i class="poster-cap-no">${String(i + 1).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}</i>
-      </figcaption>
-    </figure>`).join('')
 
-  if (dots) {
-    dots.innerHTML = items.length > 1
-      ? items.map((_, i) => `<button class="pd${i === 0 ? ' active' : ''}" type="button" data-i="${i}" aria-label="查看第 ${i + 1} 张海报"></button>`).join('')
-      : ''
-  }
+  posterMount()
 
-  posterTrackEl = track
-  posterCount = items.length
-  posterSlides = Array.from(track.querySelectorAll('.poster-slide'))
-  posterDotEls = dots ? Array.from(dots.querySelectorAll('.pd')) : []
-  posterIdx = 0
-  posterGo(0)
-
-  /* 事件：静态控件一律用覆盖式赋值 —— applyContent 会被工坊实时预览反复调用，
-     用 addEventListener 会不断叠加监听器（点一次翻好几张）。 */
-  const prev = document.getElementById('posterPrev')
-  const next = document.getElementById('posterNext')
-  const carousel = document.getElementById('posterCarousel')
-  if (prev) prev.onclick = () => { posterStop(); posterGo(posterIdx - 1); posterStart() }
-  if (next) next.onclick = () => { posterStop(); posterGo(posterIdx + 1); posterStart() }
-  posterDotEls.forEach((d) => {
-    d.onclick = () => { posterStop(); posterGo(+d.dataset.i); posterStart() }
-  })
-  if (carousel) {
-    /* 键盘 ← → 翻页（空格留给页面滚动，不抢占） */
-    carousel.onkeydown = (e) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); posterStop(); posterGo(posterIdx - 1); posterStart() }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); posterStop(); posterGo(posterIdx + 1); posterStart() }
-    }
-    /* 触屏滑动：横向位移 > 40px 且横向为主才翻页（否则让页面正常竖向滚动） */
-    let sx = 0, sy = 0
-    carousel.ontouchstart = (e) => { const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; posterStop() }
-    carousel.ontouchend = (e) => {
-      const t = e.changedTouches[0]
-      const dx = t.clientX - sx, dy = t.clientY - sy
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) posterGo(posterIdx + (dx < 0 ? 1 : -1))
-      posterStart()
-    }
-    /* 悬停暂停自动播放，让人读得完一张 */
-    carousel.onmouseenter = () => posterStop()
-    carousel.onmouseleave = () => posterStart()
-  }
   /* 进视口才自动播；出视口自动停（与动图/首屏轮播同一套省电逻辑） */
+  const play = () => {
+    if (posterDC && !posterRM.matches) posterDC.setAutoplay(true)
+  }
   if ('IntersectionObserver' in window) {
     posterIO = new IntersectionObserver((entries) => {
-      entries.forEach((en) => { en.isIntersecting ? posterStart() : posterStop() })
+      entries.forEach((en) => {
+        if (!posterDC) return
+        if (en.isIntersecting) play()
+        else posterDC.setAutoplay(false)
+      })
     }, { threshold: 0.25 })
     posterIO.observe(block)
   } else {
-    posterStart()
+    play()
   }
 }
+
+/* 跨断点重建：窗口缩放 / 旋屏后卡片 px 尺寸必须跟着换
+   （组件内部的 measure() 只做整体缩放，不换卡片尺寸，小屏会被过度缩小） */
+window.addEventListener('resize', () => {
+  clearTimeout(posterRT)
+  posterRT = setTimeout(() => {
+    if (!posterDC || !posterItems.length) return
+    if (posterBreakpoint() === posterBP) return
+    const wasAuto = posterDC.autoEnabled
+    const keep = posterDC.focusIdx
+    posterMount()
+    if (posterDC) {
+      posterDC.setFocus(keep > 0 ? keep : 0, false)
+      if (wasAuto) posterDC.setAutoplay(true)
+    }
+  }, 220)
+})
 
 function renderProfile(p) {
   const sec = document.getElementById('profile')
@@ -523,7 +534,7 @@ function renderProfile(p) {
   const skills = Array.isArray(p.skills) ? p.skills.filter(Boolean) : []
   wrap.innerHTML = `
     <aside class="profile-side reveal">
-      <div class="profile-mono" aria-hidden="true">${escHtml((p.name || '祺').slice(-1))}</div>
+      <div class="profile-mono" aria-hidden="true"><img src="assets/images/profile-avatar.webp" alt="" /></div>
       <div class="profile-name">${escHtml(p.name || '')}</div>
       ${p.role ? `<div class="profile-role">${escHtml(p.role)}</div>` : ''}
       ${p.motto ? `<div class="profile-motto">「 ${escHtml(p.motto)} 」</div>` : ''}
@@ -704,6 +715,8 @@ const modalMedia = document.getElementById('modalMedia')
 const modalTitle = document.getElementById('modalTitle')
 // 用事件委托，作品卡由 JS 动态生成也能响应
 document.addEventListener('click', (e) => {
+  /* 点了封面/标题的「查看详情」链接 → 跳 work.html 详情页，不再弹视频窗 */
+  if (e.target.closest('.work-link')) return
   const card = e.target.closest('.work-card')
   if (!card || !modal) return
   const bili = card.dataset.bilibili
@@ -953,25 +966,6 @@ onScroll()
     })
   })
 })()
-
-/* 7) 启动画面（带 ?nowelcome 时直接跳过，便于工坊实时预览） */
-const splash = document.getElementById('splash')
-const splashBar = document.getElementById('splashBar')
-const splashEnter = document.getElementById('splashEnter')
-const SPLASH_MS = 2800
-const skipSplash = new URLSearchParams(window.location.search).has('nowelcome')
-function closeSplash() { if (splash && !splash.classList.contains('hidden')) { splash.classList.add('hidden'); document.body.style.overflow = ''; lenis?.start() } }
-if (skipSplash) {
-  closeSplash()
-} else {
-  document.body.style.overflow = 'hidden'
-  lenis?.stop()                                       /* splash 期间锁定平滑滚动 */
-  if (splashBar) { splashBar.style.transition = `width ${SPLASH_MS}ms linear`; requestAnimationFrame(() => { splashBar.style.width = '100%' }) }
-  const splashTimer = setTimeout(closeSplash, SPLASH_MS)
-  splashEnter?.addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(splashTimer); closeSplash() })
-  splash?.addEventListener('click', () => { clearTimeout(splashTimer); closeSplash() })
-  document.addEventListener('keydown', () => { if (splash && !splash.classList.contains('hidden')) { clearTimeout(splashTimer); closeSplash() } })
-}
 
 /* 8) 内容加载 + 工坊实时预览 */
 async function loadContent() {

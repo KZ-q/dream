@@ -34,6 +34,8 @@
   <link rel="stylesheet" href="css/style.css" />
   <!-- 运动语言 v2：必须在 style.css 之后（同权重后定义者胜），统一时长/曲线/幅度 -->
   <link rel="stylesheet" href="css/motion.css" />
+  <!-- 玻璃拟态表面：react-bits GlassSurface 原生移植（SVG 折射滤镜） -->
+  <link rel="stylesheet" href="css/glass.css" />
   <link
     rel="preload"
     as="image"
@@ -53,7 +55,7 @@
 
   <!-- ============ 顶部导航栏（CardNav 卡片导航：汉堡展开三张分类卡，移植自 react-bits） ============ -->
   <header class="navbar" id="navbar">
-    <nav class="card-nav" id="cardNav" aria-label="主导航">
+    <nav class="card-nav" id="cardNav" aria-label="主导航" data-glass data-glass-scale="-150" data-glass-edge="0.22" data-glass-rim="off">
       <div class="card-nav-top">
         <button class="hamburger-menu" id="cnHamburger" type="button" aria-label="打开菜单" aria-expanded="false">
           <span class="hamburger-line"></span>
@@ -116,7 +118,7 @@
           <div class="hw-grid" aria-hidden="true"></div>
 
           <div class="hw-copy">
-            <span class="hero-badge hw-seq" style="--m-delay:0ms" data-bind="hero.badge">OPEN FOR COMMISSIONS</span>
+            <span class="hero-badge hw-seq" style="--m-delay:0ms" data-glass data-glass-scale="-70" data-bind="hero.badge">OPEN FOR COMMISSIONS</span>
             <h1 class="hw-title hw-seq" style="--m-delay:70ms"><span data-bind="hero.title1">以 AI 为笔</span><span class="grad-text" data-bind="hero.title2">光影为墨</span></h1>
             <p class="hw-sub hw-seq" style="--m-delay:150ms" data-bind="hero.subtitle">你好，我是孔诸祺。一位 AIGC 影像创作者：AI 短片 / 视觉叙事 / 提示词工程。<br />在这里，记录我与模型共同完成的每一次冒险。</p>
             <div class="hw-cta hw-seq" style="--m-delay:220ms">
@@ -255,7 +257,9 @@
                3D 层叠布局 / 指针拖拽 / 横向滚轮 / 键盘 ← → / 箭头 / 圆点，
                由 js/depth-carousel.js 渲染，数据来自 content.json 的 posters[] -->
           <div id="depthCarousel"></div>
-          <div class="dc-caption" id="posterCaption"><!-- 展签：随当前海报更新 --></div>
+          <!-- 展签：背后是纯色底，没有可折射的内容 —— scale=0 只保留磨砂/高光/描边，
+               避免小面板上出现彩色脏边（折射留给导航和角标那种「背后有东西」的位置） -->
+          <div class="dc-caption" id="posterCaption" data-glass data-glass-scale="0"><!-- 展签：随当前海报更新 --></div>
           <div class="poster-empty" id="posterEmpty"><!-- 空态（仅编辑器预览态可见） --></div>
         </div>
       </div>
@@ -359,6 +363,8 @@
   <script src="js/main.js"></script>
   <!-- 入场错峰 + 分层视差（在 main.js 之后：需要 .reveal 已由 main.js 接管） -->
   <script src="js/motion.js"></script>
+  <!-- 玻璃拟态表面：扫描页面上带 data-glass 的元素并挂载折射滤镜 -->
+  <script src="js/glass-surface.js"></script>
   <script src="js/hero-window.js"></script>
 </body>
 </html>

@@ -16,15 +16,29 @@
       GSAP 时间线 / IntersectionObserver / 事件委托全部原样可用。
    2. 目标原背景会被清成 transparent（否则滤镜只会糊到自己的底色），卸载时还原。
    3. 置换幅度按元素宽度缩放：-180 在 900px 导航上刚好，在 120px 角标上会糊。
+
+   渲染器：官方有 webgl / svg / auto 三档。这里只实现 svg —— WebGL 那版要把
+   背景元素拷进纹理再用 GLSL 采样，收益主要是「SVG 滤镜不被 backdrop-filter 支持时」
+   仍然可用；而本机实测 Chrome 155 的 CSS.supports('backdrop-filter','url(#x)') 为 true，
+   SVG 路径已足够。传 renderer:'webgl' 会被静默降级到 svg（不做假承诺）。
    ============================================================ */
 (function () {
   'use strict'
 
+  /* 参数与官方组件逐项对齐（23 个 props 里，与「贴皮」相关的这些全部支持）：
+     borderWidth / brightness / opacity / blur / displace / backgroundOpacity /
+     saturation / distortionScale / redOffset / greenOffset / blueOffset /
+     xChannel / yChannel / mixBlendMode / refraction / renderer
+     未移植：width / height / borderRadius（本站按元素真实尺寸自适应）、
+             shape / backdrop（仅 WebGL 渲染器使用）。 */
   var DEFAULTS = {
     borderWidth: 0.07,
     brightness: 50,
     opacity: 0.93,
-    blur: 11,
+    blur: 11,               /* 置换图内层白块的柔化半径（决定折光带宽度） */
+    displace: 0.7,          /* 官方默认 0；这里保留 0.7 作边缘抗锯齿，可被覆盖 */
+    backgroundOpacity: 0.55,/* 玻璃底色不透明度（--gfs-tint） */
+    saturation: 1.15,
     distortionScale: -180,
     redOffset: 0,
     greenOffset: 10,
@@ -32,7 +46,8 @@
     xChannel: 'R',
     yChannel: 'G',
     mixBlendMode: 'difference',
-    sat: 1.15,
+    refraction: true,       /* false = 只留磨砂/高光/描边，不做折射 */
+    renderer: 'auto',       /* auto | svg | blur；webgl 未移植，按 svg 处理 */
     rim: true
   }
 
@@ -152,7 +167,7 @@
 
     var blurNode = document.createElementNS(svgNS, 'feGaussianBlur')
     blurNode.setAttribute('in', 'output')
-    blurNode.setAttribute('stdDeviation', '0.7')
+    blurNode.setAttribute('stdDeviation', String(o.displace))
     filter.appendChild(blurNode)
 
     defs.appendChild(filter)
@@ -247,14 +262,19 @@
       })
     }
 
-    var fallback = reduce.matches || !supportsFilterBackdrop()
-    if (fallback) {
-      el.classList.add('gfs--fallback')
-      bg.style.setProperty('--gfs-filter', 'none')
-    } else {
-      bg.style.setProperty('--gfs-filter', 'url(#' + id + ')')
-    }
-    bg.style.setProperty('--gfs-sat', String(o.sat))
+    /* 渲染器选择：
+       - webgl 未移植（要 800 行 GLSL + 把背景拷进纹理），显式降级到 svg，避免用户以为开了 WebGL
+       - blur = 官方 renderer:'blur' 的等价物：只模糊不折射
+       - refraction:false 同样走「无折射」，但保留磨砂/高光/描边 */
+    var wanted = o.renderer === 'webgl' ? 'svg' : o.renderer
+    var fallback = reduce.matches || wanted === 'blur' || !supportsFilterBackdrop()
+    var refract = o.refraction !== false && !fallback
+
+    if (fallback) el.classList.add('gfs--fallback')
+    if (!refract) el.classList.add('gfs--norefract')
+    bg.style.setProperty('--gfs-filter', refract ? 'url(#' + id + ')' : 'none')
+    bg.style.setProperty('--gfs-sat', String(o.sat != null ? o.sat : o.saturation))
+    bg.style.setProperty('--gfs-tint', String(o.backgroundOpacity))
 
     inst.refresh = queue
     inst.paint = paint
@@ -278,7 +298,7 @@
     if (inst.ro) inst.ro.disconnect()
     if (inst.raf) cancelAnimationFrame(inst.raf)
     if (inst.bg && inst.bg.parentNode) inst.bg.parentNode.removeChild(inst.bg)
-    el.classList.remove('gfs', 'gfs--fallback')
+    el.classList.remove('gfs', 'gfs--fallback', 'gfs--norefract')
     el.style.backgroundColor = ''
     delete el.__gfs
     instances = instances.filter(function (x) { return x !== inst })
@@ -308,6 +328,18 @@
       var edge = parseFloat(el.getAttribute('data-glass-edge'))
       if (!isNaN(edge)) opts.borderWidth = edge
       if (el.getAttribute('data-glass-rim') === 'off') opts.rim = false
+
+      /* 新增：官方其余参数的数据属性入口 */
+      var disp = parseFloat(el.getAttribute('data-glass-displace'))
+      if (!isNaN(disp)) opts.displace = disp
+      var tint = parseFloat(el.getAttribute('data-glass-tint'))
+      if (!isNaN(tint)) opts.backgroundOpacity = tint
+      var sat = parseFloat(el.getAttribute('data-glass-sat'))
+      if (!isNaN(sat)) opts.saturation = sat
+      if (el.getAttribute('data-glass-refraction') === 'off') opts.refraction = false
+      var renderer = el.getAttribute('data-glass-renderer')
+      if (renderer) opts.renderer = renderer
+
       attach(el, opts)
     }
   }
@@ -340,6 +372,12 @@
     detach: detach,
     refresh: refreshAll,
     mount: autoMount,
-    supported: supportsFilterBackdrop
+    supported: supportsFilterBackdrop,
+    defaults: DEFAULTS,
+    /* 运行时改参数：先卸载再按新参数重挂（置换图与滤镜 ID 都要重建） */
+    set: function (el, opts) {
+      detach(el)
+      return attach(el, opts)
+    }
   }
 })()

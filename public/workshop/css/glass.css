@@ -32,8 +32,9 @@
   overflow: hidden;
   border-radius: inherit;
   pointer-events: none;
-  /* 降级底色（不支持 backdrop-filter 时至少还是一块玻璃） */
-  background: rgba(14, 20, 27, 0.55);
+  /* 降级底色 + 官方 backgroundOpacity 的落点：不支持 backdrop-filter 时，
+     这层就是「一块玻璃」的全部；支持时它是玻璃背后的暗角，压住穿透的杂色 */
+  background: rgba(14, 20, 27, var(--gfs-tint, 0.55));
 }
 
 /* 滤镜定义用 0 尺寸挂载，不参与布局 */
@@ -77,6 +78,14 @@
   background: rgba(255, 255, 255, 0.045);
   backdrop-filter: blur(16px) saturate(1.35) brightness(1.03);
   -webkit-backdrop-filter: blur(16px) saturate(1.35) brightness(1.03);
+}
+
+/* refraction:false / renderer:'blur' —— 保留磨砂与高光，只关掉折射。
+   比 .gfs--fallback 淡一档：没有折射时不该有那么多「折进来的光」。 */
+.gfs--norefract .gfs-frost {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px) saturate(var(--gfs-sat, 1.15));
+  -webkit-backdrop-filter: blur(14px) saturate(var(--gfs-sat, 1.15));
 }
 
 /* 斜向高光：让玻璃「有厚度」，不是一块灰片 */

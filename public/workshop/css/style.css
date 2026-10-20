@@ -1186,6 +1186,11 @@ img { display: block; max-width: 100%; }
   perspective: var(--dc-perspective, 1400px);
   perspective-origin: 50% 50%;
   touch-action: pan-y;               /* 横向拖拽归组件，纵向滚动手势留给页面 */
+  /* 3D 卡片带 translateZ/rotateY，变换后的正方向溢出会真实撑开可滚动区域：
+     390px 视口下实测 scrollWidth 被顶到 458px，手机端会触发「缩放适配」，
+     导致 100vw 变成 458、导航和页脚一起被拉宽 —— 整站横向不一致。
+     用 clip 而不是 hidden：不创建滚动容器、不影响纵向阴影与 3D 上下文。 */
+  overflow-x: clip;
   outline: none;
   user-select: none;
   -webkit-user-select: none;

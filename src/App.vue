@@ -4,14 +4,19 @@ import { useRoute, useRouter } from 'vue-router'
 import { useContent, PRESETS } from './composables/useContent'
 import Navbar from './components/Navbar.vue'
 import FooterBar from './components/FooterBar.vue'
-import Splash from './components/Splash.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { state, load } = useContent()
 load()
+
+function retry() {
+  load()
+}
 /* 内容工坊(/studio) 与 孔诸祺作品站(/workshop) 均为独立全屏页：隐藏站点 Navbar/Footer，避免相互遮挡 */
-const isWorkshop = computed(() => route.name === 'studio' || route.name === 'workshop' || route.name === 'workshop-edit')
+const isWorkshop = computed(() =>
+  ['studio', 'workshop', 'workshop-edit', 'root-workshop'].includes(route.name)
+)
 
 /* === 内容工坊（仅 dev）：iframe 实时预览双向同步 === */
 if (import.meta.env.DEV) {
@@ -68,31 +73,61 @@ watchEffect(() => {
 </script>
 
 <template>
-  <Splash v-if="state.status === 'loading'" />
-  <div v-else-if="state.status === 'ready'" class="app">
+  <div v-if="state.status !== 'error'" class="app">
     <Navbar v-if="!isWorkshop" :presets="PRESETS" />
     <main>
       <router-view />
     </main>
     <FooterBar v-if="!isWorkshop" />
   </div>
-  <div v-else class="boot-error container">
+  <div v-else class="boot-error">
     <h1 class="display">内容加载失败 · Content failed to load</h1>
-    <p class="err">{{ state.error?.message }}</p>
-    <button class="btn btn-primary" @click="() => location.reload()">重试 Retry</button>
+    <p class="err">{{ state.error?.message || '网络暂时不可用' }}</p>
+    <button class="btn btn-primary" @click="retry">重试 Retry</button>
+    <p class="hint">已自动重试 3 次；你也可以稍后再试。</p>
   </div>
 </template>
 
 <style scoped>
 .boot-error {
-  padding-block: 30vh;
-  text-align: center;
-  display: grid;
-  justify-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 14px;
+  padding: 24px;
+  background: #F7F8FA;
+  color: #202935;
+  text-align: center;
+  font-family: system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+.boot-error .display {
+  font-family: 'Playfair Display', Georgia, 'Songti SC', serif;
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #202935;
+  max-width: 760px;
 }
 .err {
-  color: var(--c-muted);
+  color: #718096;
   font-size: 13px;
+}
+.hint {
+  color: #718096;
+  font-size: 12px;
+}
+.boot-error .btn-primary {
+  margin-top: 8px;
+  background: linear-gradient(180deg, #E3A05E, #D48C48);
+  color: #1E2A3A;
+  border: 0;
+  box-shadow: 0 10px 24px rgba(212, 140, 72, 0.25);
+}
+.boot-error .btn-primary:hover {
+  background: linear-gradient(180deg, #EDAE6F, #DE9A56);
 }
 </style>

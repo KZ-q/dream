@@ -10,17 +10,28 @@ const routes = [
   { path: '/videos', name: 'videos', component: () => import('../views/VideosView.vue') },
   { path: '/about', name: 'about', component: () => import('../views/AboutView.vue') },
   /* 孔诸祺 AIGC 作品站：纯静态站（public/workshop/）经 iframe 承载，dev/prod 均可访问 */
-  { path: '/workshop', name: 'workshop', component: () => import('../views/PortfolioSiteView.vue') },
-  { path: '/workshop/:pathMatch(.*)*', name: 'workshop-sub', component: () => import('../views/PortfolioSiteView.vue') }
+  { path: '/workshop', name: 'workshop', component: () => import('../views/PortfolioSiteView.vue') }
 ]
 
-/* 内容工坊（编辑器）让位到 /studio，仅开发模式注册（生产构建时该分支被消除，不进产物） */
+/* 内容工坊（编辑器）注册策略 —— 双版本构建的核心开关：
+   - dev（npm run dev）：/studio 与 /workshop/edit 都注册，本地用工坊改内容；
+   - 工坊版构建（npm run build:workshop → --mode workshop → VITE_WITH_WORKSHOP=1）：注册 /workshop/edit，
+     线上也能打开工坊（保存/上传依赖本地 dev server，静态部署下自动降级为只读预览）；
+     /studio 是旧版通用工坊（预览同步依赖 dev 专属代码），不随工坊版上线；
+   - 基础版构建（npm run build）：两者都不注册，产物不含编辑器 chunk；直链 /workshop/edit 重定向回作品站。
+   ⚠️ /workshop/edit 必须排在 /workshop/:pathMatch(.*)* 之前，否则会被通配符抢先匹配。 */
 if (import.meta.env.DEV) {
   routes.push({ path: '/studio', name: 'studio', component: () => import('../views/WorkshopView.vue') })
-  /* 孔诸祺作品站专属可视化工坊（/workshop/edit），同样仅 dev 注册 */
+}
+if (import.meta.env.DEV || import.meta.env.VITE_WITH_WORKSHOP) {
+  /* 孔诸祺作品站专属可视化工坊（/workshop/edit） */
   routes.push({ path: '/workshop/edit', name: 'workshop-edit', component: () => import('../views/WorkshopEditorView.vue') })
+} else {
+  /* 基础版未编译工坊编辑器：直链编辑页时回到作品站，避免 iframe 落到 404 */
+  routes.push({ path: '/workshop/edit', redirect: '/workshop' })
 }
 
+routes.push({ path: '/workshop/:pathMatch(.*)*', name: 'workshop-sub', component: () => import('../views/PortfolioSiteView.vue') })
 routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 
 /* 锚点元素可能尚未渲染（content 异步加载完成前 #id 不存在），

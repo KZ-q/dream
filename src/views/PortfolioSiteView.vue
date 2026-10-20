@@ -6,8 +6,12 @@
    ============================================================ */
 import { computed } from 'vue'
 
-// BASE_URL 来自 vite.config 的 base（默认 '/'）。拼出 /workshop/index.html
-const src = computed(() => `${import.meta.env.BASE_URL}workshop/index.html`)
+/* BASE_URL 来自 vite.config 的 base（默认 '/'）。拼出 /workshop/index.html
+   ?v= 用构建版本号（vite.config 的 define.__BUILD_VERSION__）：
+   workshop/index.html 文件名固定、不带 hash，改版后浏览器可能拿旧缓存导致「线上已更新、用户端看不到」。
+   给 iframe 地址加上每次构建都会变的版本号，就能强制拉最新的 HTML，
+   而 HTML 内部的 css/js 引用又由 scripts/asset-version.mjs 打上内容哈希，两级都破缓存。 */
+const src = computed(() => `${import.meta.env.BASE_URL}workshop/index.html?v=${__BUILD_VERSION__}`)
 </script>
 
 <template>
